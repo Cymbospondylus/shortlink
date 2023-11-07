@@ -25,6 +25,8 @@
         <guava.version>30.0-jre</guava.version>
     </properties>
 
+
+
     <dependencyManagement>
         <!--SpringBoot-->
         <dependencies>

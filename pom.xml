@@ -16,6 +16,19 @@
         <module>gateway</module>
     </modules>
 
+    <properties>
+        <lombok.version>1.18.30</lombok.version>
+    </properties>
+
+    <!--公共依赖-->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+    </dependencies>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
