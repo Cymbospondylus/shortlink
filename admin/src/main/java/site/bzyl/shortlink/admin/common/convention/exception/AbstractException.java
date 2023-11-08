@@ -8,6 +8,9 @@ import java.util.Optional;
 
 /**
  * 抽象项目中的三类异常体系
+ * @see ClientException
+ * @see ServiceException
+ * @see RemoteException
  */
 @Getter
 public abstract class AbstractException extends RuntimeException {

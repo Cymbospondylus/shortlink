@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.admin.common.convention.exception.ClientException;
 import site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum;
@@ -19,6 +20,7 @@ import site.bzyl.shortlink.admin.service.UserService;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     public final UserMapper userMapper;
+    public final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     @Override
     public UserRespDTO getUserByUsername(String username) {
         LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
@@ -36,10 +38,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Boolean hasUsername(String username) {
-        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
-                .eq(UserDO::getUsername, username);
-        UserDO userDO = userMapper.selectOne(queryWrapper);
-        return userDO == null;
+        return userRegisterCachePenetrationBloomFilter.contains(username);
     }
 
 
