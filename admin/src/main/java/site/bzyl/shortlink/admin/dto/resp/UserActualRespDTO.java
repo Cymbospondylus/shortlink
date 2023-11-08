@@ -2,17 +2,15 @@ package site.bzyl.shortlink.admin.dto.resp;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
-import site.bzyl.shortlink.admin.common.serialize.PhoneDesensitizationSerializer;
 
 import java.time.LocalDateTime;
 
 /**
- * 用户返回参数响应
+ * 未脱敏用户返回参数响应
  */
 @Data
-public class UserRespDTO {
+public class UserActualRespDTO {
     @TableId(type = IdType.AUTO)
     /**
      * id
@@ -37,7 +35,6 @@ public class UserRespDTO {
     /**
      * 手机号
      */
-    @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
 
     /**
