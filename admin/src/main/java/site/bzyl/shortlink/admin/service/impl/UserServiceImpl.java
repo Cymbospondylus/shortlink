@@ -34,5 +34,13 @@ public class UserServiceImpl implements UserService {
         return userRespDTO;
     }
 
+    @Override
+    public Boolean hasUsername(String username) {
+        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, username);
+        UserDO userDO = userMapper.selectOne(queryWrapper);
+        return userDO == null;
+    }
+
 
 }

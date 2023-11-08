@@ -9,4 +9,6 @@ import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 @Service
 public interface UserService {
     UserRespDTO getUserByUsername(String username);
+
+    Boolean hasUsername(String username);
 }
