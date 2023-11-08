@@ -1,7 +1,5 @@
 package site.bzyl.shortlink.admin.dto.resp;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +9,6 @@ import java.time.LocalDateTime;
  */
 @Data
 public class UserActualRespDTO {
-    @TableId(type = IdType.AUTO)
     /**
      * id
      */

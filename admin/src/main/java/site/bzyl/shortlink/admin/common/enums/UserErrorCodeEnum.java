@@ -2,11 +2,16 @@ package site.bzyl.shortlink.admin.common.enums;
 
 import site.bzyl.shortlink.admin.common.convention.errorcode.IErrorCode;
 
-
+/**
+ * 后管用户错误码
+ */
 public enum UserErrorCodeEnum implements IErrorCode {
     USER_NULL("B000200", "用户记录不存在"),
 
-    USER_EXIST("B000201", "用户记录已存在");
+    USERNAME_EXIST("B000201", "用户名已存在"),
+    USER_EXIST("B000202", "用户记录已存在"),
+    USER_SAVE_ERROR("B000203", "用户新增失败");
+
 
     private final String code;
 
