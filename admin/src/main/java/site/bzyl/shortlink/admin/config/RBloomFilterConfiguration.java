@@ -1,4 +1,4 @@
-package site.bzyl.shortlink.admin.common.cache;
+package site.bzyl.shortlink.admin.config;
 
 
 import org.redisson.api.RBloomFilter;
@@ -14,7 +14,7 @@ public class RBloomFilterConfiguration {
 
     @Bean
     public RBloomFilter<String> userRegisterCachePenetrationBloomFilter(RedissonClient redissonClient) {
-        RBloomFilter<String> cachePenetrationBloomFilter = redissonClient.getBloomFilter("xxx");
+        RBloomFilter<String> cachePenetrationBloomFilter = redissonClient.getBloomFilter("userRegisterCachePenetrationBloomFilter");
         cachePenetrationBloomFilter.tryInit(100000000L, 0.001);
         return cachePenetrationBloomFilter;
     }
