@@ -3,7 +3,8 @@ package site.bzyl.shortlink.admin.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.admin.dao.entity.UserDO;
-import site.bzyl.shortlink.admin.dto.resp.UserReqDTO;
+import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
+import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 
 /**
@@ -15,5 +16,7 @@ public interface UserService extends IService<UserDO> {
 
     Boolean hasUsername(String username);
 
-    void register(UserReqDTO requestParam);
+    void register(UserRegisterReqDTO requestParam);
+
+    void updateUserByUsername(UserUpdateReqDTO requestParam);
 }

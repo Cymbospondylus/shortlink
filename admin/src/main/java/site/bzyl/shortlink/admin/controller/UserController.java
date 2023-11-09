@@ -6,8 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.common.convention.result.Results;
+import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserActualRespDTO;
-import site.bzyl.shortlink.admin.dto.resp.UserReqDTO;
+import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 import site.bzyl.shortlink.admin.service.UserService;
 
@@ -42,12 +43,17 @@ public class UserController {
     }
 
     /**
-     *
      * @param requestParam 用户注册请求参数
      */
     @PostMapping("/api/short-link/v1/user/register")
-    public Result<Void> register(@RequestBody UserReqDTO requestParam) {
+    public Result<Void> register(@RequestBody UserRegisterReqDTO requestParam) {
         userService.register(requestParam);
+        return Results.success();
+    }
+
+    @PutMapping("/api/short-link/v1/user")
+    public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam) {
+        userService.updateUserByUsername(requestParam);
         return Results.success();
     }
 }

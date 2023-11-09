@@ -2,6 +2,7 @@ package site.bzyl.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -10,16 +11,17 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.admin.common.convention.exception.ClientException;
+import site.bzyl.shortlink.admin.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum;
 import site.bzyl.shortlink.admin.dao.entity.UserDO;
 import site.bzyl.shortlink.admin.dao.mapper.UserMapper;
-import site.bzyl.shortlink.admin.dto.resp.UserReqDTO;
+import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
+import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 import site.bzyl.shortlink.admin.service.UserService;
 
 import static site.bzyl.shortlink.admin.common.constants.RedisCacheConstant.LOCK_USER_REGISTER_USERNAME;
-import static site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum.USER_EXIST;
-import static site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum.USER_SAVE_ERROR;
+import static site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum.*;
 
 /**
  * 用户业务实现
@@ -50,7 +52,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     }
 
     @Override
-    public void register(UserReqDTO requestParam) {
+    public void register(UserRegisterReqDTO requestParam) {
         if (hasUsername(requestParam.getUsername())) {
             ClientException.cast(UserErrorCodeEnum.USERNAME_EXIST);
         }
@@ -68,6 +70,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             }
         } finally {
             lock.unlock();
+        }
+    }
+
+    @Override
+    public void updateUserByUsername(UserUpdateReqDTO requestParam) {
+        // todo 验证当前用户是否为登录用户
+        UserDO userDO = BeanUtil.toBean(requestParam, UserDO.class);
+        LambdaUpdateWrapper<UserDO> updateWrapper = Wrappers.lambdaUpdate(UserDO.class)
+                .eq(UserDO::getUsername, requestParam.getUsername());
+        int update = baseMapper.update(userDO, updateWrapper);
+        if (update < 1) {
+            ServiceException.cast(USER_UPDATE_ERROR);
         }
     }
 }

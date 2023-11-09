@@ -1,4 +1,4 @@
-package site.bzyl.shortlink.admin.dto.resp;
+package site.bzyl.shortlink.admin.dto.req;
 
 import lombok.Data;
 
@@ -6,7 +6,7 @@ import lombok.Data;
  * 用户请求参数
  */
 @Data
-public class UserReqDTO {
+public class UserRegisterReqDTO {
     /**
      * 用户名
      */
