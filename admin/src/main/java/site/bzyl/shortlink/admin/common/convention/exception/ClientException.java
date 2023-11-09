@@ -27,6 +27,9 @@ public class ClientException extends AbstractException {
     public static void cast(IErrorCode code) {
         throw new ClientException(code);
     }
+    public static void cast(String message) {
+        throw new ClientException(message, null, BaseErrorCode.CLIENT_ERROR);
+    }
 
 
     @Override

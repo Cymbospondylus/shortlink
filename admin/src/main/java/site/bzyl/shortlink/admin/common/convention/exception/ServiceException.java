@@ -30,6 +30,10 @@ public class ServiceException extends AbstractException {
         throw new ServiceException(code);
     }
 
+    public static void cast(String message) {
+        throw new ServiceException(message, null, BaseErrorCode.SERVICE_ERROR);
+    }
+
     @Override
     public String toString() {
         return "ServiceException{" +
