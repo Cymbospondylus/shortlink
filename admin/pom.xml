@@ -51,6 +51,11 @@
             <artifactId>redisson-spring-boot-starter</artifactId>
         </dependency>
         <!--缓存Cache END-->
+        <!--ShardingSphere-->
+        <dependency>
+            <groupId>org.apache.shardingsphere</groupId>
+            <artifactId>shardingsphere-jdbc-core</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
