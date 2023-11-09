@@ -6,11 +6,8 @@ import site.bzyl.shortlink.admin.common.serialize.PhoneDesensitizationSerializer
 
 import java.time.LocalDateTime;
 
-/**
- * 用户返回参数响应
- */
 @Data
-public class UserRespDTO {
+public class UserLoginRespDTO {
     /**
      * id
      */
@@ -51,4 +48,9 @@ public class UserRespDTO {
      * 修改时间
      */
     private LocalDateTime updateTime;
+
+    /**
+     * token
+     */
+    private String token;
 }

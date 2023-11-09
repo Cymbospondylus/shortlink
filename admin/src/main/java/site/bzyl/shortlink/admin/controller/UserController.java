@@ -6,9 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.common.convention.result.Results;
+import site.bzyl.shortlink.admin.dto.req.UserLoginReqDTO;
+import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserActualRespDTO;
-import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
+import site.bzyl.shortlink.admin.dto.resp.UserLoginRespDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 import site.bzyl.shortlink.admin.service.UserService;
 
@@ -18,7 +20,7 @@ public class UserController {
     public final UserService userService;
 
     /**
-     * 根据用户名查用户信息
+     * 根据用户名查询用户信息
      */
     @GetMapping("/api/short-link/v1/user/{username}")
     public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username) {
@@ -26,7 +28,7 @@ public class UserController {
     }
 
     /**
-     * 根据用户名查用户未脱敏信息
+     * 根据用户名查询用户未脱敏信息
      */
     @GetMapping("/api/short-link/v1/user/actual/{username}")
     public Result<UserActualRespDTO> getActualUserByUsername(@PathVariable("username") String username) {
@@ -43,7 +45,7 @@ public class UserController {
     }
 
     /**
-     * @param requestParam 用户注册请求参数
+     * 用户注册
      */
     @PostMapping("/api/short-link/v1/user/register")
     public Result<Void> register(@RequestBody UserRegisterReqDTO requestParam) {
@@ -51,9 +53,32 @@ public class UserController {
         return Results.success();
     }
 
+    /**
+     * 根据用户名修改用户信息
+     */
     @PutMapping("/api/short-link/v1/user")
     public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam) {
         userService.updateUserByUsername(requestParam);
         return Results.success();
     }
+
+    /**
+     * 用户登录
+     * @return 用户 token
+     */
+    @PostMapping("/api/short-link/v1/user/login")
+    public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam) {
+        return Results.success(userService.login(requestParam));
+    }
+
+    /**
+     * 查询用户是否登录
+     * @param username
+     * @return True:已登录, False:未登录
+     */
+    @GetMapping("/api/short-link/v1/user/check-login")
+    public Result<Boolean> checkLogin(String username) {
+        return Results.success(userService.checkLogin(username));
+    }
+
 }
