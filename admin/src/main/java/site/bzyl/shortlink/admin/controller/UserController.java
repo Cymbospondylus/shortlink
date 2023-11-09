@@ -14,6 +14,9 @@ import site.bzyl.shortlink.admin.dto.resp.UserLoginRespDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 import site.bzyl.shortlink.admin.service.UserService;
 
+/**
+ * 后管用户接口
+ */
 @RestController
 @RequiredArgsConstructor
 public class UserController {

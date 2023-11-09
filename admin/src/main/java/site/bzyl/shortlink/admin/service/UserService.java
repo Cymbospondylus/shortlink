@@ -52,5 +52,9 @@ public interface UserService extends IService<UserDO> {
      */
     Boolean checkLogin(String username);
 
+    /**
+     * 用户登出
+     * @param username 用户名
+     */
     void logout(String username);
 }
