@@ -15,6 +15,7 @@ import site.bzyl.shortlink.admin.dao.entity.GroupDO;
 import site.bzyl.shortlink.admin.dao.mapper.ShortLinkGroupMapper;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupDeleteReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
@@ -87,16 +88,28 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
 
     @Override
     public void deleteGroupById(ShortLinkGroupDeleteReqDTO requestParam) {
-        if(!requestParam.getUsername().equals(UserContext.getUsername())) {
-            ClientException.cast("只允许修改当前登录用户的分组");
-        }
+
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getGid, requestParam.getGid())
-                .eq(GroupDO::getUsername, requestParam.getUsername());
+                .eq(GroupDO::getGid, requestParam.getGid());
         int delete = baseMapper.delete(queryWrapper);
         if (delete < 1) {
-            log.error("短链接分组删除失败, 用户名:{}, 分组gid:{}", requestParam.getUsername(), requestParam.getGid());
+            log.error("短链接分组删除失败, 用户名:{}, 分组gid:{}", UserContext.getUsername(), requestParam.getGid());
             ServiceException.cast("短链接分组删除失败");
         }
+    }
+
+    @Override
+    public void sortShortLinkGroup(List<ShortLinkGroupSortReqDTO> requestParam) {
+        requestParam.forEach(each -> {
+            GroupDO groupDO = GroupDO.builder().sortOrder(each.getSortOrder()).build();
+            LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                    .eq(GroupDO::getUsername, UserContext.getUsername())
+                    .eq(GroupDO::getGid, each.getGid());
+            int update = baseMapper.update(groupDO, updateWrapper);
+            if (update < 1) {
+                log.error("分组排序值修改失败, 分组gid:{}, 用户id:{}", each.getGid(),UserContext.getUsername());
+                ServiceException.cast("分组排序值修改失败");
+            }
+        });
     }
 }

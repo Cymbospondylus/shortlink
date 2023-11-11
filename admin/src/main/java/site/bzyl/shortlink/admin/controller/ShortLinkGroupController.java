@@ -6,6 +6,7 @@ import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.common.convention.result.Results;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupDeleteReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
@@ -44,7 +45,6 @@ public class ShortLinkGroupController {
     /**
      * 短链接分组修改接口
      * @param requestParam 短链接分组修改请求参数
-     * @return
      */
     @PutMapping("/api/short-link/v1/group")
     public Result<Void> updateShortLinkGroup(@RequestBody ShortLinkGroupUpdateReqDTO requestParam) {
@@ -55,11 +55,20 @@ public class ShortLinkGroupController {
     /**
      * 短链接分组删除接口
      * @param requestParam 短链接分组删除请求参数
-     * @return
      */
     @DeleteMapping("/api/short-link/v1/group")
     public Result<Void> deleteShortLinkGroup(@RequestBody ShortLinkGroupDeleteReqDTO requestParam) {
         shortLinkGroupService.deleteGroupById(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 修改短链接分组排序
+     * @param requestParam 短链接分组排序请求参数
+     */
+    @PostMapping("/api/short-link/v1/group/sort")
+    public Result<Void> sortShortLinkGroup(@RequestBody List<ShortLinkGroupSortReqDTO> requestParam) {
+        shortLinkGroupService.sortShortLinkGroup(requestParam);
         return Results.success();
     }
 }
