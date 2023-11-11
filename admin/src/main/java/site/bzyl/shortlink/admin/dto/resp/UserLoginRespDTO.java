@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import site.bzyl.shortlink.admin.common.serialize.PhoneDesensitizationSerializer;
 
-import java.time.LocalDateTime;
-
+/**
+ * 用户登录返回参数响应
+ */
 @Data
 public class UserLoginRespDTO {
     /**
@@ -34,23 +35,5 @@ public class UserLoginRespDTO {
      */
     private String mail;
 
-    /**
-     * 注销时间戳
-     */
-    private Long deletionTime;
 
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 修改时间
-     */
-    private LocalDateTime updateTime;
-
-    /**
-     * token
-     */
-    private String token;
 }

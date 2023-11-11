@@ -113,7 +113,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 orElseThrow(() -> new ClientException(USER_NULL));
         UserLoginRespDTO result = BeanUtil.toBean(userDO, UserLoginRespDTO.class);
         String token = IdUtil.randomUUID();
-        result.setToken(token);
         String redisKey = USER_LOGIN_PREFIX + requestParam.getUsername();
 
         stringRedisTemplate.opsForHash().put(
