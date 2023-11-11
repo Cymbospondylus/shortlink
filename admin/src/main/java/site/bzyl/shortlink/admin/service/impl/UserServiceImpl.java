@@ -132,6 +132,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public void logout() {
-        stringRedisTemplate.delete(USER_LOGIN_PREFIX + UserContext.getUsername());
+        // todo 不太合理, 先当一个接口用来删除测试，因为每次重启服务ThreadLocal里的信息会丢失
+        String key = USER_LOGIN_PREFIX + UserContext.getUsername();
+        stringRedisTemplate.delete(key);
     }
 }
