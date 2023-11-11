@@ -13,6 +13,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import site.bzyl.shortlink.admin.common.biz.user.UserContext;
 import site.bzyl.shortlink.admin.common.convention.exception.ClientException;
 import site.bzyl.shortlink.admin.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum;
@@ -96,19 +97,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     }
 
     @Override
-    public UserLoginRespDTO login(UserLoginReqDTO requestParam) {
+    public String login(UserLoginReqDTO requestParam) {
         if (checkLogin(requestParam.getUsername())) {
-            String token = Optional.ofNullable(requestParam.getToken())
-                    // token 为空
-                    .orElseThrow(() -> new ClientException(USER_TOKEN_INVALID));
-            Object userLoginInfo = Optional
-                    .ofNullable(stringRedisTemplate.opsForHash().get(USER_LOGIN_PREFIX + requestParam.getUsername(), token))
-                    // token 与 Redis 中存储的不一致
-                    .orElseThrow(() -> new ClientException(USER_TOKEN_INVALID));
-            UserLoginRespDTO userLoginRespDTO = Optional
-                    .ofNullable(JSON.parseObject(userLoginInfo.toString(), UserLoginRespDTO.class))
-                    .orElseThrow(() -> new ServiceException(USER_CACHE_NULL));
-            return userLoginRespDTO;
+            ClientException.cast("用户已登录");
         }
 
         if (!userRegisterCachePenetrationBloomFilter.contains(requestParam.getUsername())) {
@@ -130,8 +121,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 token,
                 JSON.toJSONString(result)
         );
+        // todo 开发完后要改回30分钟
         stringRedisTemplate.expire(redisKey, 30, TimeUnit.DAYS);
-        return result;
+        return token;
     }
 
     @Override
@@ -140,8 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     }
 
     @Override
-    public void logout(String username) {
-        // todo 判断是否是当前登录用户的用户名
-        stringRedisTemplate.delete(USER_LOGIN_PREFIX + username);
+    public void logout() {
+        stringRedisTemplate.delete(USER_LOGIN_PREFIX + UserContext.getUsername());
     }
 }
