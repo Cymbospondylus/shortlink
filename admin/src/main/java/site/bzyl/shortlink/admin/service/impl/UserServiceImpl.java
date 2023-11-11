@@ -99,9 +99,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     public UserLoginRespDTO login(UserLoginReqDTO requestParam) {
         if (checkLogin(requestParam.getUsername())) {
             String token = Optional.ofNullable(requestParam.getToken())
+                    // token 为空
                     .orElseThrow(() -> new ClientException(USER_TOKEN_INVALID));
             Object userLoginInfo = Optional
                     .ofNullable(stringRedisTemplate.opsForHash().get(USER_LOGIN_PREFIX + requestParam.getUsername(), token))
+                    // token 与 Redis 中存储的不一致
                     .orElseThrow(() -> new ClientException(USER_TOKEN_INVALID));
             UserLoginRespDTO userLoginRespDTO = Optional
                     .ofNullable(JSON.parseObject(userLoginInfo.toString(), UserLoginRespDTO.class))
@@ -128,7 +130,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                 token,
                 JSON.toJSONString(result)
         );
-        stringRedisTemplate.expire(redisKey, 30, TimeUnit.MINUTES);
+        stringRedisTemplate.expire(redisKey, 30, TimeUnit.DAYS);
         return result;
     }
 
