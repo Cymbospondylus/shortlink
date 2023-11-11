@@ -6,12 +6,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.admin.common.biz.user.UserContext;
 import site.bzyl.shortlink.admin.common.convention.exception.ClientException;
 import site.bzyl.shortlink.admin.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.admin.dao.entity.GroupDO;
 import site.bzyl.shortlink.admin.dao.mapper.ShortLinkGroupMapper;
+import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupDeleteReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
@@ -25,6 +27,7 @@ import static site.bzyl.shortlink.admin.common.constants.ShortLinkGroupConstant.
  * 短链接分组业务实现类
  */
 @Service
+@Slf4j
 public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper, GroupDO> implements ShortLinkGroupService {
 
     @Override
@@ -79,6 +82,21 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
         int update = baseMapper.update(groupDO, updateWrapper);
         if (update < 1) {
             ServiceException.cast("分组更新失败");
+        }
+    }
+
+    @Override
+    public void deleteGroupById(ShortLinkGroupDeleteReqDTO requestParam) {
+        if(!requestParam.getUsername().equals(UserContext.getUsername())) {
+            ClientException.cast("只允许修改当前登录用户的分组");
+        }
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getUsername, requestParam.getUsername());
+        int delete = baseMapper.delete(queryWrapper);
+        if (delete < 1) {
+            log.error("短链接分组删除失败, 用户名:{}, 分组gid:{}", requestParam.getUsername(), requestParam.getGid());
+            ServiceException.cast("短链接分组删除失败");
         }
     }
 }
