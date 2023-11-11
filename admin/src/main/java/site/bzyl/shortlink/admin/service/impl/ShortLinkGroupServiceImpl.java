@@ -13,7 +13,6 @@ import site.bzyl.shortlink.admin.common.convention.exception.ClientException;
 import site.bzyl.shortlink.admin.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.admin.dao.entity.GroupDO;
 import site.bzyl.shortlink.admin.dao.mapper.ShortLinkGroupMapper;
-import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupDeleteReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
@@ -87,13 +86,13 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
     }
 
     @Override
-    public void deleteGroupById(ShortLinkGroupDeleteReqDTO requestParam) {
+    public void deleteGroupById(String gid) {
 
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
-                .eq(GroupDO::getGid, requestParam.getGid());
+                .eq(GroupDO::getGid, gid);
         int delete = baseMapper.delete(queryWrapper);
         if (delete < 1) {
-            log.error("短链接分组删除失败, 用户名:{}, 分组gid:{}", UserContext.getUsername(), requestParam.getGid());
+            log.error("短链接分组删除失败, 用户名:{}, 分组gid:{}", UserContext.getUsername(), gid);
             ServiceException.cast("短链接分组删除失败");
         }
     }

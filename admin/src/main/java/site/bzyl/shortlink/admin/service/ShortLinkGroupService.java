@@ -2,7 +2,6 @@ package site.bzyl.shortlink.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import site.bzyl.shortlink.admin.dao.entity.GroupDO;
-import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupDeleteReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
@@ -25,7 +24,7 @@ public interface ShortLinkGroupService extends IService<GroupDO> {
 
     void updateShortLinkGroup(ShortLinkGroupUpdateReqDTO requestParam);
 
-    void deleteGroupById(ShortLinkGroupDeleteReqDTO requestParam);
+    void deleteGroupById(String gid);
 
     void sortShortLinkGroup(List<ShortLinkGroupSortReqDTO> requestParam);
 }

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.common.convention.result.Results;
-import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupDeleteReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
@@ -54,11 +53,11 @@ public class ShortLinkGroupController {
 
     /**
      * 短链接分组删除接口
-     * @param requestParam 短链接分组删除请求参数
+     * @param gid 短链接分组Gid
      */
-    @DeleteMapping("/api/short-link/v1/group")
-    public Result<Void> deleteShortLinkGroup(@RequestBody ShortLinkGroupDeleteReqDTO requestParam) {
-        shortLinkGroupService.deleteGroupById(requestParam);
+    @DeleteMapping("/api/short-link/v1/group/{gid}")
+    public Result<Void> deleteShortLinkGroup(@PathVariable("gid") String gid) {
+        shortLinkGroupService.deleteGroupById(gid);
         return Results.success();
     }
 
