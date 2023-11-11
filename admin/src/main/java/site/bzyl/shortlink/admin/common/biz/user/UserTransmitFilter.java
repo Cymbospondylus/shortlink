@@ -19,14 +19,11 @@ import static site.bzyl.shortlink.admin.common.constants.RedisCacheConstant.USER
  */
 @RequiredArgsConstructor
 public class UserTransmitFilter implements Filter {
-
     public final StringRedisTemplate stringRedisTemplate;
-
     private static List<String> IGNORE_URI = Lists.newArrayList(
             "/api/short-link/v1/user/login",
             "/api/short-link/v1/user/check-login"
     );
-
     @Override
     @SneakyThrows
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
