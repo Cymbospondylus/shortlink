@@ -64,12 +64,12 @@ public class LinkDO extends BaseDO implements Serializable {
     /**
     * 创建类型 0：控制台 1：接口
     */
-    private int createdType;
+    private Integer createdType;
 
     /**
     * 有效期类型 0：永久有效 1：用户自定义
     */
-    private int validDateType;
+    private Integer validDateType;
 
     /**
     * 有效期
@@ -79,6 +79,6 @@ public class LinkDO extends BaseDO implements Serializable {
     /**
     * 描述
     */
-    private String describe;
+    private String description;
 
 }
