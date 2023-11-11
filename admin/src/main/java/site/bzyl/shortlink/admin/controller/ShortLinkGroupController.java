@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.common.convention.result.Results;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
 
@@ -30,8 +31,23 @@ public class ShortLinkGroupController {
         return Results.success();
     }
 
+    /**
+     * 短链接分组查询接口
+     * @return 当前登录用户的短链接分组信息
+     */
     @GetMapping("/api/short-link/v1/group")
     public Result<List<ShortLinkGroupRespDTO>> listShortLinkGroup() {
         return Results.success(shortLinkGroupService.listShortLinkGroup());
+    }
+
+    /**
+     * 短链接分组修改接口
+     * @param requestParam 短链接分组修改请求参数
+     * @return
+     */
+    @PutMapping("/api/short-link/v1/group")
+    public Result<Void> update(@RequestBody ShortLinkGroupUpdateReqDTO requestParam) {
+        shortLinkGroupService.updateShortLinkGroup(requestParam);
+        return Results.success();
     }
 }
