@@ -3,12 +3,14 @@ package site.bzyl.shortlink.admin.database;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 /**
  * 抽象持久层实体类基本属性
  */
+@Data
 public class BaseDO {
     /**
      * 创建时间
