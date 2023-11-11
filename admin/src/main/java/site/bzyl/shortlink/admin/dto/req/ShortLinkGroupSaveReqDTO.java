@@ -11,9 +11,4 @@ public class ShortLinkGroupSaveReqDTO {
     * 分组名称
     */
     private String name;
-
-    /**
-    * 创建分组用户标识
-    */
-    private String username;
 }
