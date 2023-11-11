@@ -28,4 +28,9 @@ public class UserInfoDTO {
      * 真实姓名
      */
     private String realName;
+
+    /**
+     * 用户 token
+     */
+    private String token;
 }

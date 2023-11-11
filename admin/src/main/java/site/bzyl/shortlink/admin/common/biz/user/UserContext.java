@@ -1,9 +1,6 @@
 package site.bzyl.shortlink.admin.common.biz.user;
-
 import com.alibaba.ttl.TransmittableThreadLocal;
-
 import java.util.Optional;
-
 /**
  * 用户上下文
  */
@@ -44,6 +41,15 @@ public final class UserContext {
     public static String getRealName() {
         UserInfoDTO userInfoDTO = USER_THREAD_LOCAL.get();
         return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getRealName).orElse(null);
+    }
+
+    /**
+     * 获取上下文中用户 token
+     * @return 用户 token
+     */
+    public static String getToken() {
+        UserInfoDTO userInfoDTO = USER_THREAD_LOCAL.get();
+        return Optional.ofNullable(userInfoDTO).map(UserInfoDTO::getToken).orElse(null);
     }
 
     /**
