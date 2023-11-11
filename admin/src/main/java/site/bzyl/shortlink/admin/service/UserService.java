@@ -6,7 +6,6 @@ import site.bzyl.shortlink.admin.dao.entity.UserDO;
 import site.bzyl.shortlink.admin.dto.req.UserLoginReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
-import site.bzyl.shortlink.admin.dto.resp.UserLoginRespDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 
 /**
@@ -43,7 +42,7 @@ public interface UserService extends IService<UserDO> {
      * @param requestParam 用户登录请求参数
      * @return 用户登录token
      */
-    UserLoginRespDTO login(UserLoginReqDTO requestParam);
+    String login(UserLoginReqDTO requestParam);
 
     /**
      * 检查用户是否登录
@@ -54,7 +53,6 @@ public interface UserService extends IService<UserDO> {
 
     /**
      * 用户登出
-     * @param username 用户名
      */
-    void logout(String username);
+    void logout();
 }

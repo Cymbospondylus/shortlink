@@ -10,7 +10,6 @@ import site.bzyl.shortlink.admin.dto.req.UserLoginReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserActualRespDTO;
-import site.bzyl.shortlink.admin.dto.resp.UserLoginRespDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
 import site.bzyl.shortlink.admin.service.UserService;
 
@@ -70,7 +69,7 @@ public class UserController {
      * @return 用户 token
      */
     @PostMapping("/api/short-link/v1/user/login")
-    public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam) {
+    public Result<String> login(@RequestBody UserLoginReqDTO requestParam) {
         return Results.success(userService.login(requestParam));
     }
 
@@ -85,8 +84,8 @@ public class UserController {
     }
 
     @DeleteMapping("/api/short-link/v1/user/logout")
-    public Result<Void> logout(@RequestParam("username") String username) {
-        userService.logout(username);
+    public Result<Void> logout() {
+        userService.logout();
         return Results.success();
     }
 
