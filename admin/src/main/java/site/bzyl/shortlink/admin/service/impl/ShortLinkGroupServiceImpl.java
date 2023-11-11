@@ -1,5 +1,6 @@
 package site.bzyl.shortlink.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -8,8 +9,13 @@ import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.admin.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.admin.dao.entity.GroupDO;
 import site.bzyl.shortlink.admin.dao.mapper.ShortLinkGroupMapper;
-import site.bzyl.shortlink.admin.dto.req.GroupSaveReqDTO;
+import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
+import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
+
+import java.util.List;
+
+import static site.bzyl.shortlink.admin.common.constants.ShortLinkGroupConstant.DEFAULT_SORT_ORDER;
 
 /**
  * 短链接分组业务实现类
@@ -18,7 +24,7 @@ import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
 public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper, GroupDO> implements ShortLinkGroupService {
 
     @Override
-    public void saveShortLinkGroup(GroupSaveReqDTO requestParam) {
+    public void saveShortLinkGroup(ShortLinkGroupSaveReqDTO requestParam) {
         String gid;
         GroupDO groupDO;
         do  {
@@ -34,6 +40,7 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
                 .gid(gid)
                 .username(requestParam.getUsername())
                 .name(requestParam.getName())
+                .sortOrder(DEFAULT_SORT_ORDER)
                 .build();
 
         int insert = baseMapper.insert(shortLinkGroupDO);
@@ -41,5 +48,16 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
             ServiceException.cast("短链接新增失败");
         }
 
+    }
+
+    @Override
+    public List<ShortLinkGroupRespDTO> listShortLinkGroup() {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                // 从用户上下文获取当前用户名
+                .eq(GroupDO::getUsername, "叶平")
+                .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
+        List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+
+        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
     }
 }
