@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 短链接创建请求参数
+ */
 @Data
 @Builder
 @AllArgsConstructor

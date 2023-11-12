@@ -5,6 +5,9 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
+/**
+ * 短链接创建返回响应
+ */
 @Data
 @Builder
 public class ShortLinkCreateRespDTO {
