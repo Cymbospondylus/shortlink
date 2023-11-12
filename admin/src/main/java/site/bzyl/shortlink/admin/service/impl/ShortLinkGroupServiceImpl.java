@@ -37,6 +37,7 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
         do  {
             // 生成6位字符+数字的gid, 每一位36种可能, 共2176782336(21亿)
             gid = RandomUtil.randomString(6);
+            // todo 这里有个问题, 用username做 t_group的分片键会导致查询数据库有没有重复gid的操作读扩散
             LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                     .eq(GroupDO::getGid, gid);
             groupDO = baseMapper.selectOne(queryWrapper);

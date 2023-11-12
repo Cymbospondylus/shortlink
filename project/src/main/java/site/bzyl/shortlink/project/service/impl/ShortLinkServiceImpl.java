@@ -33,7 +33,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         String suffix = generateShortLinkSuffix(requestParam);
-        // TODO 这里拿到一个布隆过滤器不存在的 suffix 应该再根据suffix加个分布式锁保证不会重复添加，虽然是小概率时间
+        // TODO 这里拿到一个布隆过滤器不存在的 suffix 应该再根据suffix加个分布式锁保证不会重复添加，虽然是小概率事件
         String fullShortUri = generateFullShortUri(DEFAULT_DOMAIN, suffix);
         LinkDO linkDO = LinkDO
                 .builder()
