@@ -63,4 +63,25 @@
         </dependency>
     </dependencies>
 
+
+    <!--加了插件打包有130M, 可以直接启动-->
+    <!--不加插件打包只有68K源码, 报错:shortlink-admin-1.0-SNAPSHOT.jar中没有主清单属性-->
+    <!--spring-boot-maven项目打包插件-->
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

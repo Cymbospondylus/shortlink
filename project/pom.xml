@@ -57,4 +57,23 @@
             <artifactId>shardingsphere-jdbc-core</artifactId>
         </dependency>
     </dependencies>
+
+
+    <!--spring-boot-maven项目打包插件-->
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
