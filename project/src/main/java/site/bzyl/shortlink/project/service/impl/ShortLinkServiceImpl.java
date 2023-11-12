@@ -1,6 +1,9 @@
 package site.bzyl.shortlink.project.service.impl;
 
 import cn.hutool.core.text.StrBuilder;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +13,9 @@ import site.bzyl.shortlink.project.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.project.dao.entity.LinkDO;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
+import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
+import site.bzyl.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.project.service.ShortLinkService;
 import site.bzyl.shortlink.project.toolkit.HashUtil;
 
@@ -33,6 +38,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .shortUri(suffix)
                 .fullShortUri(fullShortUri)
                 .gid(requestParam.getGid())
+                .enableStatus(ENABLE_STATUS)
                 .domain(DEFAULT_DOMAIN)
                 .originUri(requestParam.getOriginUri())
                 .createdType(requestParam.getCreatedType())
@@ -56,6 +62,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .validDate(linkDO.getValidDate())
                 .description(linkDO.getDescription())
                 .build();
+    }
+
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+        LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
+                .eq(LinkDO::getGid, requestParam.getGid())
+                .eq(LinkDO::getEnableStatus, ENABLE_STATUS)
+                .orderByDesc(LinkDO::getCreateTime);
+        IPage<ShortLinkPageRespDTO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
+
+        return resultPage;
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {
