@@ -1,11 +1,14 @@
 package site.bzyl.shortlink.admin.dto.req;
 
-import lombok.Data;
+import lombok.*;
 
 /**
  * 短链接分组新增请求参数
  */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ShortLinkGroupSaveReqDTO {
     /**
     * 分组名称
