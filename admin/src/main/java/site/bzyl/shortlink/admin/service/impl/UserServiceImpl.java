@@ -13,17 +13,21 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import site.bzyl.shortlink.admin.common.biz.user.UserContext;
+import site.bzyl.shortlink.admin.common.biz.user.UserInfoDTO;
 import site.bzyl.shortlink.admin.common.convention.exception.ClientException;
 import site.bzyl.shortlink.admin.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum;
 import site.bzyl.shortlink.admin.dao.entity.UserDO;
 import site.bzyl.shortlink.admin.dao.mapper.UserMapper;
+import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserLoginReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserRegisterReqDTO;
 import site.bzyl.shortlink.admin.dto.req.UserUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserLoginRespDTO;
 import site.bzyl.shortlink.admin.dto.resp.UserRespDTO;
+import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
 import site.bzyl.shortlink.admin.service.UserService;
 
 import java.util.Optional;
@@ -31,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import static site.bzyl.shortlink.admin.common.constants.RedisCacheConstant.LOCK_USER_REGISTER_USERNAME;
 import static site.bzyl.shortlink.admin.common.constants.RedisCacheConstant.USER_LOGIN_PREFIX;
+import static site.bzyl.shortlink.admin.common.constants.ShortLinkGroupConstant.DEFAULT_GROUP_NAME;
 import static site.bzyl.shortlink.admin.common.enums.UserErrorCodeEnum.*;
 
 /**
@@ -42,6 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     public final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     public final RedissonClient redissonClient;
     public final StringRedisTemplate stringRedisTemplate;
+    public final ShortLinkGroupService shortLinkGroupService;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -64,24 +70,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     }
 
     @Override
-    public void register(UserRegisterReqDTO requestParam) {
+    @Transactional
+    public String register(UserRegisterReqDTO requestParam) {
         if (hasUsername(requestParam.getUsername())) {
             ClientException.cast(UserErrorCodeEnum.USERNAME_EXIST);
         }
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_USERNAME + requestParam.getUsername());
+        String token = null;
         try {
             if (lock.tryLock()) {
-                int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
+                UserDO userDO = BeanUtil.toBean(requestParam, UserDO.class);
+                int insert = baseMapper.insert(userDO);
                 if (insert < 1) {
                     ClientException.cast(USER_SAVE_ERROR);
                 }
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+                // 注册后直接登录
+                UserLoginReqDTO userLoginReqDTO = UserLoginReqDTO
+                        .builder()
+                        .username(userDO.getUsername())
+                        .password(userDO.getPassword())
+                        .build();
+                token = login(userLoginReqDTO);
+                // 保存到用户上下文
+                UserInfoDTO userInfoDTO = UserInfoDTO
+                        .builder()
+                        .userId(userDO.getId())
+                        .username(userDO.getUsername())
+                        .realName(userDO.getRealName())
+                        .token(token)
+                        .build();
+                UserContext.setUser(userInfoDTO);
+                // 用户注册后创建一个默认分组
+                ShortLinkGroupSaveReqDTO shortLinkGroupSaveReqDTO = ShortLinkGroupSaveReqDTO
+                        .builder()
+                        .name(DEFAULT_GROUP_NAME)
+                        .build();
+                shortLinkGroupService.saveShortLinkGroup(shortLinkGroupSaveReqDTO);
             } else {
                 ClientException.cast(USER_EXIST);
             }
         } finally {
             lock.unlock();
         }
+        return token;
     }
 
     @Override

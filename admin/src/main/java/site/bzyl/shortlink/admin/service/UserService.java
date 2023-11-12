@@ -27,9 +27,11 @@ public interface UserService extends IService<UserDO> {
 
     /**
      * 用户注册
+     *
      * @param requestParam 用户注册请求参数
+     * @return
      */
-    void register(UserRegisterReqDTO requestParam);
+    String register(UserRegisterReqDTO requestParam);
 
     /**
      * 根据用户名修改用户信息
