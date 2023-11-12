@@ -1,5 +1,6 @@
 package site.bzyl.shortlink.project.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -70,9 +71,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .eq(LinkDO::getGid, requestParam.getGid())
                 .eq(LinkDO::getEnableStatus, ENABLE_STATUS)
                 .orderByDesc(LinkDO::getCreateTime);
-        IPage<ShortLinkPageRespDTO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
-
-        return resultPage;
+        IPage<LinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
+        return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {
