@@ -1,6 +1,10 @@
 package site.bzyl.shortlink.project.service.impl;
 
+import cn.hutool.core.text.StrBuilder;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.project.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.project.dao.entity.LinkDO;
@@ -10,17 +14,19 @@ import site.bzyl.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.project.service.ShortLinkService;
 import site.bzyl.shortlink.project.toolkit.HashUtil;
 
-import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.DEFAULT_DOMAIN;
-import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.DEFAULT_PROTOCOL;
+import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.*;
 
 /**
  * 短链接业务层实现
  */
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> implements ShortLinkService {
+    private final RBloomFilter<String> shortLinkCreationCachePenetrationBloomFilter;
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
-        String suffix = generateShortLinkSuffix(requestParam.getOriginUri());
+        String suffix = generateShortLinkSuffix(requestParam);
         String fullShortUri = generateFullShortUri(DEFAULT_DOMAIN, suffix);
         LinkDO linkDO = LinkDO
                 .builder()
@@ -39,6 +45,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
         if (insert < 1) {
             ServiceException.cast("短链接创建失败");
         }
+        shortLinkCreationCachePenetrationBloomFilter.add(fullShortUri);
         return ShortLinkCreateRespDTO
                 .builder()
                 .shortUri(linkDO.getShortUri())
@@ -51,17 +58,28 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .build();
     }
 
-    private static String generateShortLinkSuffix(String originUri) {
-        String suffix = HashUtil.hashToBase62(originUri);
-        return suffix;
+    private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {
+        int retryCount = 0;
+        while (true) {
+            // 使用 原始长链接 + 系统当前毫秒数, 每次尝试获取hash值都不同
+            String suffix = HashUtil.hashToBase62(requestParam.getOriginUri() + System.currentTimeMillis());
+            String fullShortUri = generateFullShortUri(DEFAULT_DOMAIN, suffix);
+            if (!shortLinkCreationCachePenetrationBloomFilter.contains(fullShortUri)) {
+                return suffix;
+            }
+            retryCount++;
+            if (retryCount >= SHORT_LINK_CREATION_MAX_RETRY) {
+                ServiceException.cast("短链接创建重试次数过多");
+            }
+        }
     }
 
-    private static String generateFullShortUri(String domain, String shortUri) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(DEFAULT_PROTOCOL)
+    private String generateFullShortUri(String domain, String shortUri) {
+        return StrBuilder.create()  // new StringBuilder()
+                .append(DEFAULT_PROTOCOL)
                 .append(domain)
                 .append("/")
-                .append(shortUri);
-        return builder.toString();
+                .append(shortUri)
+                .toString();
     }
 }
