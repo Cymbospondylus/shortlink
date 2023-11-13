@@ -55,6 +55,11 @@ public class ShortLinkController {
     }
 
     // todo hutool 工具类发的http请求没有PUT方法，重构成feign调用后改成PUT
+
+    /**
+     * 短链接信息修改接口
+     * @param requestParam 短链接信息修改请求参数
+     */
     @PostMapping("/api/short-link/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
         shortLinkService.updateShortLink(requestParam);
