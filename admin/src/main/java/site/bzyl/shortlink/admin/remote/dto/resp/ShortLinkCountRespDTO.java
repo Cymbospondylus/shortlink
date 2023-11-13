@@ -1,4 +1,4 @@
-package site.bzyl.shortlink.admin.remote.dto;
+package site.bzyl.shortlink.admin.remote.dto.resp;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

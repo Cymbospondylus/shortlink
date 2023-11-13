@@ -17,7 +17,7 @@ import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
-import site.bzyl.shortlink.admin.remote.dto.ShortLinkCountRespDTO;
+import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.admin.remote.service.ShortLinkRemoteService;
 import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
 
