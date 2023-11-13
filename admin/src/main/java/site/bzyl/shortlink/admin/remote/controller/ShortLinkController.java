@@ -40,12 +40,12 @@ public class ShortLinkController {
 
     /**
      * 查询分组中短链接的数量
-     * @param gidList gid数组
+     * @param requestParam gidList数组
      * @return 分组内短链接计数返回响应
      */
     @GetMapping("/api/short-link/admin/v1/count")
-    public Result<List<ShortLinkCountRespDTO>> countShortLink(@RequestParam List<String> gidList) {
-        return shortLinkRemoteService.countShortLink(gidList);
+    public Result<List<ShortLinkCountRespDTO>> countShortLink(@RequestParam List<String> requestParam) {
+        return shortLinkRemoteService.countShortLink(requestParam);
     }
 }
 

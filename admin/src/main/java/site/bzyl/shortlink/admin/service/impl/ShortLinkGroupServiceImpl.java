@@ -84,7 +84,6 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
         // 传 gidList 的好处是只用一次远程调用
         List<ShortLinkCountRespDTO> countShortLinkList =
                 shortLinkRemoteService.countShortLink(gidList).getData();
-        // todo 17:09有时间换空间的写法
         countShortLinkList.forEach(each -> {
             ShortLinkGroupRespDTO shortLinkGroupRespDTO = map.get(each.getGid());
             shortLinkGroupRespDTO.setShortLinkCount(each.getShortLinkCount());

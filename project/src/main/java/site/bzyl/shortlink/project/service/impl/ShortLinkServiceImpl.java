@@ -81,8 +81,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     }
 
     @Override
-    public List<ShortLinkCountRespDTO> countShortLink(List<String> gidList) {
-        List<ShortLinkCountRespDTO> resultList = gidList.stream()
+    public List<ShortLinkCountRespDTO> countShortLink(List<String> requestParam) {
+        List<ShortLinkCountRespDTO> resultList = requestParam.stream()
                 .map(each -> {
                     LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
                             .eq(LinkDO::getGid, each);

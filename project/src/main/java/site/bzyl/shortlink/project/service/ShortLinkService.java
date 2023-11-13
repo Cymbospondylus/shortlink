@@ -20,5 +20,5 @@ public interface ShortLinkService extends IService<LinkDO> {
 
     IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
 
-    List<ShortLinkCountRespDTO> countShortLink(List<String> gidList);
+    List<ShortLinkCountRespDTO> countShortLink(List<String> requestParam);
 }
