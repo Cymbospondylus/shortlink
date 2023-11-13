@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @TableName("t_link")
-public class LinkDO extends BaseDO implements Serializable {
+public class ShortLinkDO extends BaseDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
