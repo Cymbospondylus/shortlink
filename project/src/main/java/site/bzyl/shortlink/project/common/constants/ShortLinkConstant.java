@@ -7,7 +7,7 @@ public class ShortLinkConstant {
     /**
      * 默认域名
      */
-    public static final String DEFAULT_DOMAIN = "www.bzyl.site";
+    public static final String DEFAULT_DOMAIN = "ljq.fan";
 
     /**
      *  默认协议
