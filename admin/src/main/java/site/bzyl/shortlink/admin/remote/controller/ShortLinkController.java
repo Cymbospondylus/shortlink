@@ -3,9 +3,10 @@ package site.bzyl.shortlink.admin.remote.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
-import site.bzyl.shortlink.admin.remote.dto.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
+import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkUpdateReqDTO;
+import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.admin.remote.service.ShortLinkRemoteService;
@@ -46,6 +47,15 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/count")
     public Result<List<ShortLinkCountRespDTO>> countShortLink(@RequestParam List<String> requestParam) {
         return shortLinkRemoteService.countShortLink(requestParam);
+    }
+
+    /**
+     * 短链接信息修改接口
+     * @param requestParam 短链接信息修改请求参数
+     */
+    @PostMapping("/api/short-link/admin/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
+        return  shortLinkRemoteService.updateShortLink(requestParam);
     }
 }
 

@@ -5,7 +5,8 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
-import site.bzyl.shortlink.admin.remote.dto.ShortLinkCountRespDTO;
+import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkUpdateReqDTO;
+import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
@@ -41,6 +42,12 @@ public interface ShortLinkRemoteService {
         paramMap.put("gidList", requestParam);
         String pageJsonStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count", paramMap);
         return JSON.parseObject(pageJsonStr, new TypeReference<>() {
+        });
+    }
+
+    default Result<Void> updateShortLink(ShortLinkUpdateReqDTO requestParam) {
+        String resultBodyJsonStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(requestParam));
+        return JSON.parseObject(resultBodyJsonStr, new TypeReference<>() {
         });
     }
 }
