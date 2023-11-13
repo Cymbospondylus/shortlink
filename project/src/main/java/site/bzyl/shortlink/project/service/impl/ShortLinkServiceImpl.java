@@ -15,10 +15,14 @@ import site.bzyl.shortlink.project.dao.entity.LinkDO;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import site.bzyl.shortlink.project.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.project.service.ShortLinkService;
 import site.bzyl.shortlink.project.toolkit.HashUtil;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.*;
 
@@ -74,6 +78,23 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .orderByDesc(LinkDO::getCreateTime);
         IPage<LinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
         return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+    }
+
+    @Override
+    public List<ShortLinkCountRespDTO> countShortLink(List<String> gidList) {
+        List<ShortLinkCountRespDTO> resultList = gidList.stream()
+                .map(each -> {
+                    LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
+                            .eq(LinkDO::getGid, each);
+                    Integer shortLinkCount = Math.toIntExact(baseMapper.selectCount(queryWrapper));
+                    return ShortLinkCountRespDTO
+                            .builder()
+                            .gid(each)
+                            .shortLinkCount(shortLinkCount)
+                            .build();
+                })
+                .collect(Collectors.toList());
+        return resultList;
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {

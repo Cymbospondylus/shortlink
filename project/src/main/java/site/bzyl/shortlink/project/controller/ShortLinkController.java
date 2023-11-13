@@ -7,9 +7,12 @@ import site.bzyl.shortlink.project.common.convention.result.Result;
 import site.bzyl.shortlink.project.common.convention.result.Results;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import site.bzyl.shortlink.project.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.project.service.ShortLinkService;
+
+import java.util.List;
 
 /**
  * 短链接相关接口
@@ -38,5 +41,15 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/v1/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
         return Results.success(shortLinkService.pageShortLink(requestParam));
+    }
+
+    /**
+     * 查询分组中短链接的数量
+     * @param gidList gid数组
+     * @return 分组内短链接计数返回响应
+     */
+    @GetMapping("/api/short-link/v1/count")
+    public Result<List<ShortLinkCountRespDTO>> countShortLink(@RequestParam List<String> gidList) {
+        return Results.success(shortLinkService.countShortLink(gidList));
     }
 }
