@@ -1,16 +1,16 @@
 package site.bzyl.shortlink.admin.remote.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
+import site.bzyl.shortlink.admin.remote.dto.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.admin.remote.service.ShortLinkRemoteService;
+
+import java.util.List;
 
 /**
  * 短链接中台远程调用接口
@@ -36,6 +36,16 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/admin/v1/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         return shortLinkRemoteService.createShortLink(requestParam);
+    }
+
+    /**
+     * 查询分组中短链接的数量
+     * @param gidList gid数组
+     * @return 分组内短链接计数返回响应
+     */
+    @GetMapping("/api/short-link/admin/v1/count")
+    public Result<List<ShortLinkCountRespDTO>> countShortLink(@RequestParam List<String> gidList) {
+        return shortLinkRemoteService.countShortLink(gidList);
     }
 }
 

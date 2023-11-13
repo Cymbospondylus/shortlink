@@ -17,9 +17,14 @@ import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSaveReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import site.bzyl.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import site.bzyl.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
+import site.bzyl.shortlink.admin.remote.dto.ShortLinkCountRespDTO;
+import site.bzyl.shortlink.admin.remote.service.ShortLinkRemoteService;
 import site.bzyl.shortlink.admin.service.ShortLinkGroupService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static site.bzyl.shortlink.admin.common.constants.ShortLinkGroupConstant.DEFAULT_SORT_ORDER;
 
@@ -29,6 +34,8 @@ import static site.bzyl.shortlink.admin.common.constants.ShortLinkGroupConstant.
 @Service
 @Slf4j
 public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper, GroupDO> implements ShortLinkGroupService {
+    // todo  后续重构为Spring Feign 远程调用
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService(){};
 
     @Override
     public void saveShortLinkGroup(ShortLinkGroupSaveReqDTO requestParam) {
@@ -65,8 +72,25 @@ public class ShortLinkGroupServiceImpl extends ServiceImpl<ShortLinkGroupMapper,
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+        List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList =
+                BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        // 存入 map 中在查找到短链接个数后直接 set 值
+        Map<String, ShortLinkGroupRespDTO> map = new HashMap<>();
+        shortLinkGroupRespDTOList.forEach(each -> map.put(each.getGid(), each));
 
-        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        List<String> gidList = shortLinkGroupRespDTOList.stream()
+                .map(each -> each.getGid())
+                .collect(Collectors.toList());
+        // 传 gidList 的好处是只用一次远程调用
+        List<ShortLinkCountRespDTO> countShortLinkList =
+                shortLinkRemoteService.countShortLink(gidList).getData();
+        // todo 17:09有时间换空间的写法
+        countShortLinkList.forEach(each -> {
+            ShortLinkGroupRespDTO shortLinkGroupRespDTO = map.get(each.getGid());
+            shortLinkGroupRespDTO.setShortLinkCount(each.getShortLinkCount());
+        });
+
+        return shortLinkGroupRespDTOList;
     }
 
     @Override
