@@ -1,6 +1,8 @@
 package site.bzyl.shortlink.project.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.project.common.convention.result.Result;
@@ -64,5 +66,18 @@ public class ShortLinkController {
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
         shortLinkService.updateShortLink(requestParam);
         return Results.success();
+    }
+
+    /**
+     * 短链接跳转目的网站
+     * @param shortUri 短链接 uri
+     * @param request HTTP请求
+     * @param response HTTP响应
+     */
+    @GetMapping("/{short-uri}")
+    public void shortLinkRedirect(@PathVariable("short-uri")String shortUri,
+                                  HttpServletRequest request,
+                                  HttpServletResponse response) {
+        shortLinkService.shortLinkRedirect(shortUri, request, response);
     }
 }

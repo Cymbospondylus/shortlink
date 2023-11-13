@@ -7,14 +7,19 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.bzyl.shortlink.project.common.convention.exception.ClientException;
 import site.bzyl.shortlink.project.common.convention.exception.ServiceException;
-import site.bzyl.shortlink.project.dao.entity.LinkDO;
+import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
+import site.bzyl.shortlink.project.dao.entity.ShortLinkGotoDO;
+import site.bzyl.shortlink.project.dao.mapper.ShortLinkGotoMapper;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
@@ -39,15 +44,17 @@ import static site.bzyl.shortlink.project.common.enums.ShortLinkValidDateType.PE
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> implements ShortLinkService {
+public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements ShortLinkService {
     private final RBloomFilter<String> shortLinkCreationCachePenetrationBloomFilter;
+    private final ShortLinkGotoMapper shortLinkGotoMapper;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         String suffix = generateShortLinkSuffix(requestParam);
-        // TODO 这里拿到一个布隆过滤器不存在的 suffix 应该再根据suffix加个分布式锁保证不会重复添加，虽然是小概率事件
+        // TODO 这里拿到一个布隆过滤器不存在的 suffix 应该再根据suffix加个分布式锁保证不会重复添加，小概率事件会拿到相同 suffix
         String fullShortUri = generateFullShortUri(DEFAULT_DOMAIN, suffix);
-        LinkDO linkDO = LinkDO
+        ShortLinkDO shortLinkDO = ShortLinkDO
                 .builder()
                 .shortUri(suffix)
                 .fullShortUri(fullShortUri)
@@ -61,29 +68,40 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .description(requestParam.getDescription())
                 .build();
 
-        int insert = baseMapper.insert(linkDO);
+        int insert = baseMapper.insert(shortLinkDO);
         if (insert < 1) {
             ServiceException.cast("短链接创建失败");
         }
         shortLinkCreationCachePenetrationBloomFilter.add(fullShortUri);
+
+        ShortLinkGotoDO shortLinkGotoDO = ShortLinkGotoDO
+                .builder()
+                .fullShortUri(fullShortUri)
+                .gid(requestParam.getGid())
+                .build();
+        int insertGoto = shortLinkGotoMapper.insert(shortLinkGotoDO);
+        if (insertGoto < 1) {
+            ServiceException.cast("短链接路由表创建失败");
+        }
+
         return ShortLinkCreateRespDTO
                 .builder()
-                .shortUri(linkDO.getShortUri())
-                .fullShortUri(linkDO.getFullShortUri())
-                .originUri(linkDO.getOriginUri())
-                .domain(linkDO.getDomain())
-                .gid(linkDO.getGid())
-                .validDate(linkDO.getValidDate())
-                .description(linkDO.getDescription())
+                .shortUri(shortLinkDO.getShortUri())
+                .fullShortUri(shortLinkDO.getFullShortUri())
+                .originUri(shortLinkDO.getOriginUri())
+                .domain(shortLinkDO.getDomain())
+                .gid(shortLinkDO.getGid())
+                .validDate(shortLinkDO.getValidDate())
+                .description(shortLinkDO.getDescription())
                 .build();
     }
 
     @Override
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
-        LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
-                .eq(LinkDO::getGid, requestParam.getGid())
-                .orderByDesc(LinkDO::getCreateTime);
-        IPage<LinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .orderByDesc(ShortLinkDO::getCreateTime);
+        IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
         return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
@@ -91,8 +109,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     public List<ShortLinkCountRespDTO> countShortLink(List<String> requestParam) {
         List<ShortLinkCountRespDTO> resultList = requestParam.stream()
                 .map(each -> {
-                    LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
-                            .eq(LinkDO::getGid, each);
+                    LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                            .eq(ShortLinkDO::getGid, each);
                     Integer shortLinkCount = Math.toIntExact(baseMapper.selectCount(queryWrapper));
                     return ShortLinkCountRespDTO
                             .builder()
@@ -107,12 +125,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
     @Override
     @Transactional
     public void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
-        LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
-                .eq(LinkDO::getFullShortUri, requestParam.getFullShortUri());
-        LinkDO hasShortLink = baseMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getFullShortUri, requestParam.getFullShortUri());
+        ShortLinkDO hasShortLink = baseMapper.selectOne(queryWrapper);
         Optional.ofNullable(hasShortLink).orElseThrow(() -> new ClientException("短链接记录不存在"));
 
-        LinkDO shortLinkDO = LinkDO
+        ShortLinkDO shortLinkDO = ShortLinkDO
                 .builder()
                 .domain(hasShortLink.getDomain())
                 .shortUri(hasShortLink.getShortUri())
@@ -129,11 +147,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 .build();
         // gid 相等表示没有修改分组，只是修改短链接信息
         if (Objects.equals(hasShortLink.getGid(), shortLinkDO.getGid())) {
-            LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
-                    .eq(LinkDO::getGid, shortLinkDO.getGid())
-                    .eq(LinkDO::getFullShortUri, shortLinkDO.getFullShortUri())
+            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getGid, shortLinkDO.getGid())
+                    .eq(ShortLinkDO::getFullShortUri, shortLinkDO.getFullShortUri())
                     // 根据有效期类型判断, 如果是永久有效则把有效期设置为 null
-                    .set(shortLinkDO.getValidDateType().equals(PERMANENT.getType()), LinkDO::getValidDate, null);
+                    .set(shortLinkDO.getValidDateType().equals(PERMANENT.getType()), ShortLinkDO::getValidDate, null);
             int update = baseMapper.update(shortLinkDO, updateWrapper);
             if (update < 1) {
                 log.error("修改短链接信息失败, gid:{}, fullShortUri:{}", requestParam.getGid(), requestParam.getFullShortUri());
@@ -141,9 +159,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
             }
         } // gid 不相等, 表示当前短链接移动到了新的分组
         else {
-            LambdaQueryWrapper<LinkDO> deleteQueryWrapper = Wrappers.lambdaQuery(LinkDO.class)
-                    .eq(LinkDO::getGid, hasShortLink.getGid())
-                    .eq(LinkDO::getFullShortUri, hasShortLink.getFullShortUri());
+            LambdaQueryWrapper<ShortLinkDO> deleteQueryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getGid, hasShortLink.getGid())
+                    .eq(ShortLinkDO::getFullShortUri, hasShortLink.getFullShortUri());
             int insert = baseMapper.insert(shortLinkDO);
             int delete = baseMapper.delete(deleteQueryWrapper);
             if (insert < 1 || delete < 1) {
@@ -151,6 +169,34 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, LinkDO> i
                 ServiceException.cast("修改短链接信息失败");
             }
         }
+    }
+
+    @SneakyThrows
+    @Override
+    public void shortLinkRedirect(String shortUri, HttpServletRequest request, HttpServletResponse response) {
+        String fullShortUrl = StrBuilder
+                .create()
+                .append(request.getScheme())
+                .append("://")
+                .append(request.getServerName())
+                .append("/")
+                .append(shortUri)
+                .toString();
+
+        LambdaQueryWrapper<ShortLinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                .eq(ShortLinkGotoDO::getFullShortUri, fullShortUrl);
+        ShortLinkGotoDO shortLinkGotoDO = Optional.ofNullable(shortLinkGotoMapper.selectOne(linkGotoQueryWrapper))
+                .orElseThrow(() -> new ClientException("短链接跳转路由不存在"));
+
+
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, shortLinkGotoDO.getGid())
+                .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS)
+                .eq(ShortLinkDO::getFullShortUri, fullShortUrl);
+        ShortLinkDO shortLinkDO = Optional.ofNullable(baseMapper.selectOne(queryWrapper))
+                .orElseThrow(() -> new ClientException("短链接不存在或未启用"));
+
+        response.sendRedirect(shortLinkDO.getOriginUri());
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {

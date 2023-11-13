@@ -2,7 +2,9 @@ package site.bzyl.shortlink.project.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
-import site.bzyl.shortlink.project.dao.entity.LinkDO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
@@ -15,7 +17,7 @@ import java.util.List;
 /**
  * 短链接业务层接口
  */
-public interface ShortLinkService extends IService<LinkDO> {
+public interface ShortLinkService extends IService<ShortLinkDO> {
 
     ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam);
 
@@ -24,4 +26,6 @@ public interface ShortLinkService extends IService<LinkDO> {
     List<ShortLinkCountRespDTO> countShortLink(List<String> requestParam);
 
     void updateShortLink(ShortLinkUpdateReqDTO requestParam);
+
+    void shortLinkRedirect(String shortUri, HttpServletRequest request, HttpServletResponse response);
 }
