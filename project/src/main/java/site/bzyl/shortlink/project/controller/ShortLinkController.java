@@ -7,6 +7,7 @@ import site.bzyl.shortlink.project.common.convention.result.Result;
 import site.bzyl.shortlink.project.common.convention.result.Results;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import site.bzyl.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkPageRespDTO;
@@ -51,5 +52,12 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/v1/count")
     public Result<List<ShortLinkCountRespDTO>> countShortLink(@RequestParam List<String> requestParam) {
         return Results.success(shortLinkService.countShortLink(requestParam));
+    }
+
+    // todo hutool 工具类发的http请求没有PUT方法，重构成feign调用后改成PUT
+    @PostMapping("/api/short-link/v1/update")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam) {
+        shortLinkService.updateShortLink(requestParam);
+        return Results.success();
     }
 }
