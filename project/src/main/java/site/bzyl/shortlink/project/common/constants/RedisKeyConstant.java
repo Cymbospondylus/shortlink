@@ -9,5 +9,13 @@ public class RedisKeyConstant {
      */
     public static final String SHORT_LINK_REDIRECT_KEY = "short-link_redirect:%s";
 
+    /**
+     * 短链接空值缓存, 防止缓存穿透
+     */
+    public static final String SHORT_LINK_NULL_VALUE_KEY = "short-link_null:%s";
+
+    /**
+     * 短链接查询时加锁，防止缓存击穿
+     */
     public static final String LOCK_SHORT_LINK_REDIRECT = "lock_short_link_redirect:%s";
 }

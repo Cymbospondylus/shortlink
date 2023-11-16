@@ -2,6 +2,7 @@ package site.bzyl.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -37,10 +38,10 @@ import site.bzyl.shortlink.project.toolkit.HashUtil;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.LOCK_SHORT_LINK_REDIRECT;
-import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.SHORT_LINK_REDIRECT_KEY;
+import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.*;
 import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.*;
 import static site.bzyl.shortlink.project.common.enums.ShortLinkValidDateType.PERMANENT;
 
@@ -197,6 +198,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             response.sendRedirect(originalLink);
             return;
         }
+
+        if (!shortLinkCreationCachePenetrationBloomFilter.contains(fullShortUrl)) {
+            ClientException.cast("短链接不存在");
+            return;
+        }
+
+        String shortLinkNullValue = stringRedisTemplate.opsForValue().get(String.format(SHORT_LINK_NULL_VALUE_KEY, fullShortUrl));
+        if (StrUtil.isNotBlank(shortLinkNullValue)) {
+            ClientException.cast("短链接不存在");
+            return;
+        }
+
         RLock lock = redissonClient.getLock(String.format(LOCK_SHORT_LINK_REDIRECT, fullShortUrl));
         lock.lock();
         try {
@@ -207,15 +220,36 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
             LambdaQueryWrapper<ShortLinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
                     .eq(ShortLinkGotoDO::getFullShortUri, fullShortUrl);
-            ShortLinkGotoDO shortLinkGotoDO = Optional.ofNullable(shortLinkGotoMapper.selectOne(linkGotoQueryWrapper))
-                    .orElseThrow(() -> new ClientException("短链接跳转路由不存在"));
+            ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
+            if (shortLinkGotoDO == null) {
+                stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_NULL_VALUE_KEY, fullShortUrl),
+                        "-",
+                        30,
+                        TimeUnit.SECONDS
+                );
+                ClientException.cast("短链接跳转路由不存在");
+                return;
+            }
             LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
                     .eq(ShortLinkDO::getGid, shortLinkGotoDO.getGid())
                     .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS)
                     .eq(ShortLinkDO::getFullShortUri, fullShortUrl);
-            ShortLinkDO shortLinkDO = Optional.ofNullable(baseMapper.selectOne(queryWrapper))
-                    .orElseThrow(() -> new ClientException("短链接不存在或未启用"));
-            stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl), shortLinkDO.getOriginUri());
+            ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
+
+            if (shortLinkDO == null) {
+                stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_NULL_VALUE_KEY, fullShortUrl),
+                        "-",
+                        30,
+                        TimeUnit.SECONDS
+                );
+                ClientException.cast("短链接不存在或未启用");
+                return;
+            }
+
+            stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl),
+                    shortLinkDO.getOriginUri(),
+                    30 + RandomUtil.randomInt(5),
+                    TimeUnit.MINUTES);
             response.sendRedirect(shortLinkDO.getOriginUri());
         } finally {
             lock.unlock();
