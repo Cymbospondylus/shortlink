@@ -68,7 +68,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .shortUri(suffix)
                 .fullShortUri(fullShortUri)
                 .gid(requestParam.getGid())
-                .enableStatus(ENABLE_STATUS)
+                .enableStatus(ENABLE_STATUS_ENABLED)
                 .domain(DEFAULT_DOMAIN)
                 .originUri(requestParam.getOriginUri())
                 .createdType(requestParam.getCreatedType())
@@ -114,6 +114,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS_ENABLED)
                 .orderByDesc(ShortLinkDO::getCreateTime);
         IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
         return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
@@ -238,7 +239,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }
             LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
                     .eq(ShortLinkDO::getGid, shortLinkGotoDO.getGid())
-                    .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS)
+                    .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS_ENABLED)
                     .eq(ShortLinkDO::getFullShortUri, fullShortUrl);
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
 

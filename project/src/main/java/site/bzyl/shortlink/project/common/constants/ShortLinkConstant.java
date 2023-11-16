@@ -22,12 +22,12 @@ public class ShortLinkConstant {
     /**
      * 启用状态标识
      */
-    public static final Integer ENABLE_STATUS = 0;
+    public static final Integer ENABLE_STATUS_ENABLED = 0;
 
     /**
-     * 禁用状态标识
+     * 加入回收站状态标识
      */
-    public static final Integer DISABLE_STATUS = 1;
+    public static final Integer ENABLE_STATUS_RECYCLE_BIN = 1;
 
     /**
      * 永久有效短链接默认缓存过期时间(一个月)
