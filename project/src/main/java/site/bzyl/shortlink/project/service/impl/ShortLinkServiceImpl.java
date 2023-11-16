@@ -2,7 +2,6 @@ package site.bzyl.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -97,7 +96,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUri),
                 shortLinkDO.getOriginUri(),
                 ShortLinkUtil.getLinkExpireTimeMillis(requestParam.getValidDate()),
-                TimeUnit.MINUTES);
+                TimeUnit.MILLISECONDS);
 
         return ShortLinkCreateRespDTO
                 .builder()
@@ -255,8 +254,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
             stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl),
                     shortLinkDO.getOriginUri(),
-                    30 + RandomUtil.randomInt(5),
-                    TimeUnit.MINUTES);
+                    ShortLinkUtil.getLinkExpireTimeMillis(shortLinkDO.getValidDate()),
+                    TimeUnit.MILLISECONDS);
             response.sendRedirect(shortLinkDO.getOriginUri());
         } finally {
             lock.unlock();
