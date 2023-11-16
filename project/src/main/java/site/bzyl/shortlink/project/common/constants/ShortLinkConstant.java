@@ -33,4 +33,9 @@ public class ShortLinkConstant {
      * 永久有效短链接默认缓存过期时间(一个月)
      */
     public static Long DEFAULT_PERMANENT_LINK_EXPIRE_TIME = 2629800000l;
+
+    /**
+     * 短链接不存在跳转页面
+     */
+    public static String SHORT_LINK_NOT_FOUND_PAGE = "/page/notfound";
 }

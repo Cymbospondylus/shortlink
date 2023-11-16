@@ -205,13 +205,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         }
 
         if (!shortLinkCreationCachePenetrationBloomFilter.contains(fullShortUrl)) {
-            ClientException.cast("短链接不存在");
+            response.sendRedirect(SHORT_LINK_NOT_FOUND_PAGE);
             return;
         }
 
         String shortLinkNullValue = stringRedisTemplate.opsForValue().get(String.format(SHORT_LINK_NULL_VALUE_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(shortLinkNullValue)) {
-            ClientException.cast("短链接不存在");
+            response.sendRedirect(SHORT_LINK_NOT_FOUND_PAGE);
             return;
         }
 
@@ -233,7 +233,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         30,
                         TimeUnit.SECONDS
                 );
-                ClientException.cast("短链接跳转路由不存在");
+                response.sendRedirect(SHORT_LINK_NOT_FOUND_PAGE);
                 return;
             }
             LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
@@ -248,7 +248,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         30,
                         TimeUnit.SECONDS
                 );
-                ClientException.cast("短链接不存在或未启用");
+                response.sendRedirect(SHORT_LINK_NOT_FOUND_PAGE);
                 return;
             }
 
