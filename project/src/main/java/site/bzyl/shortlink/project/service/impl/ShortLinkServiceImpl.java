@@ -2,6 +2,7 @@ package site.bzyl.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -13,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.bzyl.shortlink.project.common.convention.exception.ClientException;
@@ -35,6 +39,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.LOCK_SHORT_LINK_REDIRECT;
+import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.SHORT_LINK_REDIRECT_KEY;
 import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.*;
 import static site.bzyl.shortlink.project.common.enums.ShortLinkValidDateType.PERMANENT;
 
@@ -47,6 +53,8 @@ import static site.bzyl.shortlink.project.common.enums.ShortLinkValidDateType.PE
 public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements ShortLinkService {
     private final RBloomFilter<String> shortLinkCreationCachePenetrationBloomFilter;
     private final ShortLinkGotoMapper shortLinkGotoMapper;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedissonClient redissonClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -176,27 +184,42 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public void shortLinkRedirect(String shortUri, HttpServletRequest request, HttpServletResponse response) {
         String fullShortUrl = StrBuilder
                 .create()
+                // 获取请求方式是http还是https
                 .append(request.getScheme())
                 .append("://")
+                // 获取域名
                 .append(request.getServerName())
                 .append("/")
                 .append(shortUri)
                 .toString();
-
-        LambdaQueryWrapper<ShortLinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
-                .eq(ShortLinkGotoDO::getFullShortUri, fullShortUrl);
-        ShortLinkGotoDO shortLinkGotoDO = Optional.ofNullable(shortLinkGotoMapper.selectOne(linkGotoQueryWrapper))
-                .orElseThrow(() -> new ClientException("短链接跳转路由不存在"));
-
-
-        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
-                .eq(ShortLinkDO::getGid, shortLinkGotoDO.getGid())
-                .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS)
-                .eq(ShortLinkDO::getFullShortUri, fullShortUrl);
-        ShortLinkDO shortLinkDO = Optional.ofNullable(baseMapper.selectOne(queryWrapper))
-                .orElseThrow(() -> new ClientException("短链接不存在或未启用"));
-
-        response.sendRedirect(shortLinkDO.getOriginUri());
+        String originalLink = stringRedisTemplate.opsForValue().get(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl));
+        if (StrUtil.isNotBlank(originalLink)) {
+            response.sendRedirect(originalLink);
+            return;
+        }
+        RLock lock = redissonClient.getLock(String.format(LOCK_SHORT_LINK_REDIRECT, fullShortUrl));
+        lock.lock();
+        try {
+            originalLink = stringRedisTemplate.opsForValue().get(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl));
+            if (StrUtil.isNotBlank(originalLink)) {
+                response.sendRedirect(originalLink);
+                return;
+            }
+            LambdaQueryWrapper<ShortLinkGotoDO> linkGotoQueryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                    .eq(ShortLinkGotoDO::getFullShortUri, fullShortUrl);
+            ShortLinkGotoDO shortLinkGotoDO = Optional.ofNullable(shortLinkGotoMapper.selectOne(linkGotoQueryWrapper))
+                    .orElseThrow(() -> new ClientException("短链接跳转路由不存在"));
+            LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getGid, shortLinkGotoDO.getGid())
+                    .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS)
+                    .eq(ShortLinkDO::getFullShortUri, fullShortUrl);
+            ShortLinkDO shortLinkDO = Optional.ofNullable(baseMapper.selectOne(queryWrapper))
+                    .orElseThrow(() -> new ClientException("短链接不存在或未启用"));
+            stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl), shortLinkDO.getOriginUri());
+            response.sendRedirect(shortLinkDO.getOriginUri());
+        } finally {
+            lock.unlock();
+        }
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {
