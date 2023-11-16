@@ -28,4 +28,9 @@ public class ShortLinkConstant {
      * 禁用状态标识
      */
     public static final Integer DISABLE_STATUS = 1;
+
+    /**
+     * 永久有效短链接默认缓存过期时间(一个月)
+     */
+    public static Long DEFAULT_PERMANENT_LINK_EXPIRE_TIME = 2629800000l;
 }

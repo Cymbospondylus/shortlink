@@ -34,6 +34,7 @@ import site.bzyl.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.project.service.ShortLinkService;
 import site.bzyl.shortlink.project.toolkit.HashUtil;
+import site.bzyl.shortlink.project.toolkit.ShortLinkUtil;
 
 import java.util.List;
 import java.util.Objects;
@@ -77,12 +78,6 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .description(requestParam.getDescription())
                 .build();
 
-        int insert = baseMapper.insert(shortLinkDO);
-        if (insert < 1) {
-            ServiceException.cast("短链接创建失败");
-        }
-        shortLinkCreationCachePenetrationBloomFilter.add(fullShortUri);
-
         ShortLinkGotoDO shortLinkGotoDO = ShortLinkGotoDO
                 .builder()
                 .fullShortUri(fullShortUri)
@@ -92,6 +87,17 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         if (insertGoto < 1) {
             ServiceException.cast("短链接路由表创建失败");
         }
+
+        int insert = baseMapper.insert(shortLinkDO);
+        if (insert < 1) {
+            ServiceException.cast("短链接创建失败");
+        }
+        shortLinkCreationCachePenetrationBloomFilter.add(fullShortUri);
+        // 缓存预热防止缓存雪崩
+        stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUri),
+                shortLinkDO.getOriginUri(),
+                ShortLinkUtil.getLinkExpireTimeMillis(requestParam.getValidDate()),
+                TimeUnit.MINUTES);
 
         return ShortLinkCreateRespDTO
                 .builder()
@@ -222,6 +228,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkGotoDO::getFullShortUri, fullShortUrl);
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
             if (shortLinkGotoDO == null) {
+                // 使用 "-", 表示缓存空对象，用于前面使用StrUtil判断缓存是否为空(没有缓存空对象)
                 stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_NULL_VALUE_KEY, fullShortUrl),
                         "-",
                         30,
