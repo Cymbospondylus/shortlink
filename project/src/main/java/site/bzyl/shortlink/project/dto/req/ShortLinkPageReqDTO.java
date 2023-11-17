@@ -11,7 +11,7 @@ import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
 @Data
 public class ShortLinkPageReqDTO extends Page<ShortLinkDO> {
     /**
-     * 短链接分组id
+     * 分组标识
      */
     private String gid;
 }
