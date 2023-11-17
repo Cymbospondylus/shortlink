@@ -112,10 +112,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @Override
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+        // todo 短链接分组和回收站分组都存在查询用户所有的问题, 虽然可以通过gid来区分, 最好还是加一层DTO根据分组和List返回
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
-                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .in(ShortLinkDO::getGid, requestParam.getGidList())
                 .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS_ENABLED)
-                .orderByDesc(ShortLinkDO::getCreateTime);
+                .orderByDesc(ShortLinkDO::getUpdateTime);
         IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
         return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }

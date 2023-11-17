@@ -1,6 +1,7 @@
 package site.bzyl.shortlink.admin.remote.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
@@ -10,6 +11,7 @@ import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCountRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import site.bzyl.shortlink.admin.remote.service.ShortLinkRemoteService;
+import site.bzyl.shortlink.admin.remote.service.ShortLinkService;
 
 import java.util.List;
 
@@ -17,7 +19,10 @@ import java.util.List;
  * 短链接中台远程调用接口
  */
 @RestController
+@RequiredArgsConstructor
 public class ShortLinkController {
+
+    private final ShortLinkService shortLinkService;
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService(){};
     /**
      * 分页查询短链接
@@ -26,7 +31,7 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
-        return shortLinkRemoteService.pageShortLink(requestParam);
+        return shortLinkService.pageShortLink(requestParam);
     }
 
     /**
