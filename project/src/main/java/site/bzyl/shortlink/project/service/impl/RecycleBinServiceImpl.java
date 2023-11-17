@@ -23,6 +23,7 @@ import site.bzyl.shortlink.project.toolkit.ShortLinkUtil;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.SHORT_LINK_NULL_VALUE_KEY;
 import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.SHORT_LINK_REDIRECT_KEY;
 import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.ENABLE_STATUS_ENABLED;
 import static site.bzyl.shortlink.project.common.constants.ShortLinkConstant.ENABLE_STATUS_RECYCLE_BIN;
@@ -97,5 +98,8 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
                 ShortLinkUtil.getLinkExpireTimeMillis(shortLinkDO.getValidDate()),
                 TimeUnit.MILLISECONDS
         );
+
+        // 短链接移入回收站期间, 如果有跳转请求会缓存一个空值, 恢复短链接的时候要把这个空值缓存删掉
+        stringRedisTemplate.delete(String.format(SHORT_LINK_NULL_VALUE_KEY, shortLinkDO.getFullShortUri()));
     }
 }
