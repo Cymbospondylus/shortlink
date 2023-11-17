@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
-import site.bzyl.shortlink.admin.dto.req.RecycleBinPageReqDTO;
+import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinPageReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.RecycleBinPageRespDTO;
 
@@ -24,7 +24,7 @@ public interface RecycleBinRemoteService {
 
     default Result<IPage<RecycleBinPageRespDTO>> pageRecycleBinLink(RecycleBinPageReqDTO requestParam) {
         Map<String, Object> paramMap = new HashMap<>();
-        paramMap.put("gid", requestParam.getGid());
+        paramMap.put("gidList", requestParam.getGidList());
         paramMap.put("current", requestParam.getCurrent());
         paramMap.put("size", requestParam.getSize());
         String pageJsonStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", paramMap);

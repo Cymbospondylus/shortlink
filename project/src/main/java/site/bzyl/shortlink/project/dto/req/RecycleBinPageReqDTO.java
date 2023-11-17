@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
 
+import java.util.List;
+
 /**
  * 短链接回收站分页查询请求参数
  */
@@ -18,5 +20,5 @@ public class RecycleBinPageReqDTO extends Page<ShortLinkDO> {
     /**
      * 分组标识
      */
-    private String gid;
+    private List<String> gidList;
 }
