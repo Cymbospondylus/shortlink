@@ -37,7 +37,7 @@ public class RecycleBinController {
      * @return 短链接分页查询响应参数
      */
     @GetMapping("/api/short-link/v1/recycle-bin/page")
-    public Result<IPage<RecycleBinPageRespDTO>> pageRecycleBinLink(@RequestBody RecycleBinPageReqDTO requestParam) {
+    public Result<IPage<RecycleBinPageRespDTO>> pageRecycleBinLink(RecycleBinPageReqDTO requestParam) {
         return Results.success(recycleBinService.pageRecycleBinLink(requestParam));
     }
 }
