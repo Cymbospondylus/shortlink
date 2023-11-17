@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.project.common.convention.exception.ClientException;
 import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
+import site.bzyl.shortlink.project.dto.req.RecycleBinDeleteReqDTO;
 import site.bzyl.shortlink.project.dto.req.RecycleBinPageReqDTO;
 import site.bzyl.shortlink.project.dto.req.RecycleBinRestoreReqDTO;
 import site.bzyl.shortlink.project.dto.req.RecycleBinSaveReqDTO;
@@ -101,5 +102,18 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
 
         // 短链接移入回收站期间, 如果有跳转请求会缓存一个空值, 恢复短链接的时候要把这个空值缓存删掉
         stringRedisTemplate.delete(String.format(SHORT_LINK_NULL_VALUE_KEY, shortLinkDO.getFullShortUri()));
+    }
+
+    @Override
+    public void deleteShortLinkInRecycleBin(RecycleBinDeleteReqDTO requestParam) {
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getFullShortUri, requestParam.getFullShortUri())
+                .eq(ShortLinkDO::getEnableStatus, ENABLE_STATUS_RECYCLE_BIN);
+
+        int delete = baseMapper.delete(queryWrapper);
+        if (delete < 1) {
+            ClientException.cast("删除回收站短链接失败");
+        }
     }
 }

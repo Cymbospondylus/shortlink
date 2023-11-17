@@ -2,11 +2,9 @@ package site.bzyl.shortlink.admin.remote.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
+import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinDeleteReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinPageReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinRestoreReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
@@ -49,5 +47,14 @@ public class RecycleBinController {
     @PostMapping("/api/short-link/admin/v1/recycle-bin/restore")
     public Result<Void> restoreShortLinkFromRecycleBin(@RequestBody RecycleBinRestoreReqDTO requestParam) {
         return recycleBinRemoteService.restoreShortLinkFromRecycleBin(requestParam);
+    }
+
+    /**
+     * 移除回收站短链接接口
+     * @param requestParam 移除回收站短链接请求参数
+     */
+    @DeleteMapping("/api/short-link/admin/v1/recycle-bin")
+    public Result<Void> deleteShortLinkInRecycleBin(@RequestBody RecycleBinDeleteReqDTO requestParam) {
+        return recycleBinRemoteService.deleteShortLinkInRecycleBin(requestParam);
     }
 }
