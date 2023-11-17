@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinPageReqDTO;
+import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinRestoreReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.RecycleBinPageRespDTO;
 
@@ -29,6 +30,12 @@ public interface RecycleBinRemoteService {
         paramMap.put("size", requestParam.getSize());
         String pageJsonStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", paramMap);
         return JSON.parseObject(pageJsonStr, new TypeReference<>() {
+        });
+    }
+
+    default Result<Void> restoreShortLinkFromRecycleBin(RecycleBinRestoreReqDTO requestParam) {
+        String resultBodyJsonStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/restore", JSON.toJSONString(requestParam));
+        return JSON.parseObject(resultBodyJsonStr, new TypeReference<>() {
         });
     }
 }

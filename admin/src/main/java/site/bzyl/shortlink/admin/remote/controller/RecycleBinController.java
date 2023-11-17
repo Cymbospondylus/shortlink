@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import site.bzyl.shortlink.admin.common.convention.result.Result;
-import site.bzyl.shortlink.admin.common.convention.result.Results;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinPageReqDTO;
+import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinRestoreReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import site.bzyl.shortlink.admin.remote.dto.resp.RecycleBinPageRespDTO;
 import site.bzyl.shortlink.admin.remote.service.RecycleBinRemoteService;
@@ -29,8 +29,7 @@ public class RecycleBinController {
      */
     @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
     public Result<Void> addShortLinkToRecycleBin(@RequestBody RecycleBinSaveReqDTO requestParam) {
-        recycleBinRemoteService.addShortLinkToRecycleBin(requestParam);
-        return Results.success();
+        return recycleBinRemoteService.addShortLinkToRecycleBin(requestParam);
     }
 
     /**
@@ -41,5 +40,14 @@ public class RecycleBinController {
     @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
     public Result<IPage<RecycleBinPageRespDTO>> pageRecycleBinLink(RecycleBinPageReqDTO requestParam) {
         return shortLinkRecycleBinService.pageRecycleBinLink(requestParam);
+    }
+
+    /**
+     * 恢复回收站短链接接口
+     * @param requestParam 恢复回收站短链接请求参数
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/restore")
+    public Result<Void> restoreShortLinkFromRecycleBin(@RequestBody RecycleBinRestoreReqDTO requestParam) {
+        return recycleBinRemoteService.restoreShortLinkFromRecycleBin(requestParam);
     }
 }
