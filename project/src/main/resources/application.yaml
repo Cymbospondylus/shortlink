@@ -17,3 +17,8 @@ spring:
     view:
       prefix: /templates/
       suffix: .html
+
+
+mybatis-plus:
+  mapper-locations: classpath*:site/bzyl/shortlink/project/dao/mapper/*.xml
+  type-aliases-package: site.bzyl.shortlink.project.dao.entity
