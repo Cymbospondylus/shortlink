@@ -1,6 +1,7 @@
 package site.bzyl.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -21,8 +22,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.bzyl.shortlink.project.common.convention.exception.ClientException;
 import site.bzyl.shortlink.project.common.convention.exception.ServiceException;
+import site.bzyl.shortlink.project.dao.entity.LinkAccessStatsDO;
 import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
 import site.bzyl.shortlink.project.dao.entity.ShortLinkGotoDO;
+import site.bzyl.shortlink.project.dao.mapper.ShortLinkAccessStatsMapper;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkGotoMapper;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
@@ -35,6 +38,8 @@ import site.bzyl.shortlink.project.service.ShortLinkService;
 import site.bzyl.shortlink.project.toolkit.HashUtil;
 import site.bzyl.shortlink.project.toolkit.ShortLinkUtil;
 
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -56,6 +61,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final ShortLinkGotoMapper shortLinkGotoMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
+    private final ShortLinkAccessStatsMapper shortLinkAccessStatsMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -202,6 +208,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .toString();
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl));
         if (StrUtil.isNotBlank(originalLink)) {
+
+            shortLinkAccessStats(fullShortUrl, null, request, response);
+
+
             response.sendRedirect(originalLink);
             return;
         }
@@ -222,6 +232,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             originalLink = stringRedisTemplate.opsForValue().get(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl));
             if (StrUtil.isNotBlank(originalLink)) {
+                shortLinkAccessStats(fullShortUrl, null, request, response);
                 response.sendRedirect(originalLink);
                 return;
             }
@@ -254,6 +265,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 return;
             }
 
+            shortLinkAccessStats(fullShortUrl, shortLinkDO.getGid(), request, response);
+
             stringRedisTemplate.opsForValue().set(String.format(SHORT_LINK_REDIRECT_KEY, fullShortUrl),
                     shortLinkDO.getOriginUri(),
                     ShortLinkUtil.getLinkExpireTimeMillis(shortLinkDO.getValidDate()),
@@ -262,6 +275,27 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         } finally {
             lock.unlock();
         }
+    }
+
+    private void shortLinkAccessStats(String fullShortUrl, String gid, HttpServletRequest request, HttpServletResponse response) {
+        if (StrUtil.isBlank(gid)) {
+            LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                    .eq(ShortLinkGotoDO::getFullShortUri, fullShortUrl);
+            ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
+            gid = shortLinkGotoDO.getGid();
+        }
+        LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO
+                .builder()
+                .fullShortUrl(fullShortUrl)
+                .gid(gid)
+                .date(LocalDate.now())
+                .pv(1)
+                .uv(2)
+                .uip(3)
+                .hour(DateUtil.hour(new Date(), true))
+                .weekday(DateUtil.dayOfWeek(new Date()))
+                .build();
+        shortLinkAccessStatsMapper.accessShortLink(linkAccessStatsDO);
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {
