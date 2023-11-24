@@ -18,4 +18,6 @@ public class RedisKeyConstant {
      * 短链接查询时加锁，防止缓存击穿
      */
     public static final String LOCK_SHORT_LINK_REDIRECT = "lock_short_link_redirect:%s";
+
+    public static final String SHORT_LINK_STATS_UV = "short-link:stats:uv:%s";
 }

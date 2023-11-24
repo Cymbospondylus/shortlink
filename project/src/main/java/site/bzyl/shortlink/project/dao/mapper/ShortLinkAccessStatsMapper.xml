@@ -31,9 +31,9 @@
               0
           )
             ON DUPLICATE KEY UPDATE
-             pv = pv + 1,
-             uv = uv + 2,
-             uip = uip + 3;
+             pv = pv + #{linkAccessStats.pv},
+             uv = uv + #{linkAccessStats.uv},
+             uip = uip +  #{linkAccessStats.uip};
     </insert>
 
 </mapper>
