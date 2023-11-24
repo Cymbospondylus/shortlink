@@ -45,6 +45,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static site.bzyl.shortlink.project.common.constants.RedisKeyConstant.*;
@@ -66,6 +67,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
+    private final LinkAccessLogsMapper linkAccessLogsMapper;
 
 
     @Value("${short-link.stats.locale.amap-key}")
@@ -203,6 +205,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
     @SneakyThrows
     @Override
+    @Transactional
     public void shortLinkRedirect(String shortUri, HttpServletRequest request, HttpServletResponse response) {
         String fullShortUrl = StrBuilder
                 .create()
@@ -288,15 +291,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private void shortLinkAccessStats(String fullShortUrl, String gid, HttpServletRequest request, HttpServletResponse response) {
         // Lambda 表达式中需要使用原子变量
         AtomicBoolean uvFirstFlag = new AtomicBoolean();
+        AtomicReference<String> uv = new AtomicReference<>();
         Runnable addCookieTask = () -> {
-            String uv = UUID.fastUUID().toString();
-            Cookie uvCookie = new Cookie("uv", uv);
+            uv.set(UUID.fastUUID().toString());
+            Cookie uvCookie = new Cookie("uv", uv.get());
             // Cookie 有效期 30 天
             uvCookie.setMaxAge(60 * 60 * 24 * 30);
             // Cookie 作用域为当前域名下的短链接
             uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.lastIndexOf("/"), fullShortUrl.length()));
             response.addCookie(uvCookie);
-            Long added = stringRedisTemplate.opsForSet().add(String.format(SHORT_LINK_STATS_UV, fullShortUrl), uv);
+            Long added = stringRedisTemplate.opsForSet().add(String.format(SHORT_LINK_STATS_UV, fullShortUrl), uv.get());
             uvFirstFlag.set(added != null && added > 0L);
         };
         Cookie[] cookies = request.getCookies();
@@ -306,6 +310,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .findFirst()
                     .map(Cookie::getValue)
                     .ifPresentOrElse(each -> {
+                        uv.set(each);
                         Long uvAdded = stringRedisTemplate.opsForSet().add(String.format(SHORT_LINK_STATS_UV, fullShortUrl), each);
                         uvFirstFlag.set(uvAdded != null && uvAdded > 0L);
                     }, addCookieTask);
@@ -358,22 +363,36 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(LocalDate.now())
                     .build();
             linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+            String os = ShortLinkUtil.getOs(request);
             LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
-                    .os(ShortLinkUtil.getOs(request))
+                    .os(os)
                     .cnt(1)
                     .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .date(LocalDate.now())
                     .build();
             linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
+
+            String browser = ShortLinkUtil.getBrowser(request);
+
             LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
-                    .browser(ShortLinkUtil.getBrowser(request))
+                    .browser(browser)
                     .cnt(1)
                     .gid(gid)
                     .fullShortUrl(fullShortUrl)
                     .date(LocalDate.now())
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
+
+            LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
+                    .user(uv.get())
+                    .ip(clientIp)
+                    .browser(browser)
+                    .os(os)
+                    .gid(gid)
+                    .fullShortUrl(fullShortUrl)
+                    .build();
+            linkAccessLogsMapper.insert(linkAccessLogsDO);
         }
     }
 
