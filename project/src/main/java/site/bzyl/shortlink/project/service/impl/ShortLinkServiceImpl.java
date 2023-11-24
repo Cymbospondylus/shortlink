@@ -299,13 +299,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .findFirst()
                     .map(Cookie::getValue)
                     .ifPresentOrElse(each -> {
-                        Long added = stringRedisTemplate.opsForSet().add(String.format(SHORT_LINK_STATS_UV, fullShortUrl), each);
-                        uvFirstFlag.set(added != null && added > 0L);
+                        Long uvAdded = stringRedisTemplate.opsForSet().add(String.format(SHORT_LINK_STATS_UV, fullShortUrl), each);
+                        uvFirstFlag.set(uvAdded != null && uvAdded > 0L);
                     }, addCookieTask);
         }
         else {
             addCookieTask.run();
         }
+
+        String clientIp = ShortLinkUtil.getClientIp(request);
+        Long uipAdded = stringRedisTemplate.opsForSet().add(String.format(SHORT_LINK_STATS_UIP, fullShortUrl), clientIp);
+        boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
+
 
         if (StrUtil.isBlank(gid)) {
             LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
@@ -320,7 +325,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .date(LocalDate.now())
                 .pv(1)
                 .uv(uvFirstFlag.get()? 1 : 0)
-                .uip(3)
+                .uip(uipFirstFlag ? 1 : 0)
                 .hour(DateUtil.hour(new Date(), true))
                 .weekday(DateUtil.dayOfWeek(new Date()))
                 .build();
