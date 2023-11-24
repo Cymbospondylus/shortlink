@@ -6,6 +6,9 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -20,14 +23,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.bzyl.shortlink.project.common.convention.exception.ClientException;
 import site.bzyl.shortlink.project.common.convention.exception.ServiceException;
 import site.bzyl.shortlink.project.dao.entity.LinkAccessStatsDO;
+import site.bzyl.shortlink.project.dao.entity.LinkLocaleStatsDO;
 import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
 import site.bzyl.shortlink.project.dao.entity.ShortLinkGotoDO;
+import site.bzyl.shortlink.project.dao.mapper.LinkLocaleStatsMapper;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkAccessStatsMapper;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkGotoMapper;
 import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
@@ -63,6 +69,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final ShortLinkAccessStatsMapper shortLinkAccessStatsMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLocaleAmapKey;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -330,6 +341,28 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .weekday(DateUtil.dayOfWeek(new Date()))
                 .build();
         shortLinkAccessStatsMapper.accessShortLink(linkAccessStatsDO);
+
+        Map<String, Object> localeParamMap = new HashMap<>();
+        localeParamMap.put("key", statsLocaleAmapKey);
+        localeParamMap.put("ip", clientIp);
+        String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
+        JSONObject localeResultObj = JSON.parseObject(localeResultStr);
+        String infoCode = localeResultObj.getString("infocode");
+        if (StrUtil.isNotBlank(infoCode) && StrUtil.equals(infoCode, "10000")) {
+            String province = localeResultObj.getString("province");
+            boolean unknownFlag = StrUtil.equals(province, "[]");
+            LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
+                    .province(unknownFlag ? "未知" : province)
+                    .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
+                    .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
+                    .cnt(1)
+                    .fullShortUrl(fullShortUrl)
+                    .country("中国")
+                    .gid(gid)
+                    .date(LocalDate.now())
+                    .build();
+            linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+        }
     }
 
     private String generateShortLinkSuffix(ShortLinkCreateReqDTO requestParam) {

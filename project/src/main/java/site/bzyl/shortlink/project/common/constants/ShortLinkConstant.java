@@ -38,4 +38,9 @@ public class ShortLinkConstant {
      * 短链接不存在跳转页面
      */
     public static String SHORT_LINK_NOT_FOUND_PAGE = "/page/notfound";
+
+    /**
+     * 高德获取地区接口地址
+     */
+    public static final String AMAP_REMOTE_URL = "https://restapi.amap.com/v3/ip";
 }
