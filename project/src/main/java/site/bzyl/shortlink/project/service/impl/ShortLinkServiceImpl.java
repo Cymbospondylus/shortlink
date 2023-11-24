@@ -29,14 +29,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.bzyl.shortlink.project.common.convention.exception.ClientException;
 import site.bzyl.shortlink.project.common.convention.exception.ServiceException;
-import site.bzyl.shortlink.project.dao.entity.LinkAccessStatsDO;
-import site.bzyl.shortlink.project.dao.entity.LinkLocaleStatsDO;
-import site.bzyl.shortlink.project.dao.entity.ShortLinkDO;
-import site.bzyl.shortlink.project.dao.entity.ShortLinkGotoDO;
-import site.bzyl.shortlink.project.dao.mapper.LinkLocaleStatsMapper;
-import site.bzyl.shortlink.project.dao.mapper.ShortLinkAccessStatsMapper;
-import site.bzyl.shortlink.project.dao.mapper.ShortLinkGotoMapper;
-import site.bzyl.shortlink.project.dao.mapper.ShortLinkMapper;
+import site.bzyl.shortlink.project.dao.entity.*;
+import site.bzyl.shortlink.project.dao.mapper.*;
 import site.bzyl.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import site.bzyl.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
@@ -70,6 +64,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final RedissonClient redissonClient;
     private final ShortLinkAccessStatsMapper shortLinkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
 
 
     @Value("${short-link.stats.locale.amap-key}")
@@ -362,6 +357,14 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(LocalDate.now())
                     .build();
             linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+            LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                    .os(ShortLinkUtil.getOs(request))
+                    .cnt(1)
+                    .gid(gid)
+                    .fullShortUrl(fullShortUrl)
+                    .date(LocalDate.now())
+                    .build();
+            linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
         }
     }
 
