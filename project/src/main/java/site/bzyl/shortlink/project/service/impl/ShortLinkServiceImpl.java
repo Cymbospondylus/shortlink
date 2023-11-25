@@ -63,7 +63,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final ShortLinkGotoMapper shortLinkGotoMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
-    private final ShortLinkAccessStatsMapper shortLinkAccessStatsMapper;
+    private final linkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
@@ -341,7 +341,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .hour(DateUtil.hour(new Date(), true))
                 .weekday(DateUtil.dayOfWeek(new Date()))
                 .build();
-        shortLinkAccessStatsMapper.accessShortLink(linkAccessStatsDO);
+        linkAccessStatsMapper.accessShortLink(linkAccessStatsDO);
 
         Map<String, Object> localeParamMap = new HashMap<>();
         localeParamMap.put("key", statsLocaleAmapKey);
