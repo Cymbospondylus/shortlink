@@ -10,9 +10,12 @@ import site.bzyl.shortlink.project.dao.mapper.*;
 import site.bzyl.shortlink.project.dto.req.ShortLinkStatsReqDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkStatsAccessDailyRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkStatsLocaleCNRespDTO;
+import site.bzyl.shortlink.project.dto.resp.ShortLinkStatsOsRespDTO;
 import site.bzyl.shortlink.project.dto.resp.ShortLinkStatsRespDTO;
 import site.bzyl.shortlink.project.service.ShortLinkStatsService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,11 +63,31 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                         .orElse(0))
                 .collect(Collectors.toList());
 
+
+        // 操作系统访问监控
+        List<ShortLinkStatsOsRespDTO> osStats = new ArrayList<>();
+        List<HashMap<String, Object>> listOsStatsByShortLink = linkOsStatsMapper.listOsStatsByShortLink(requestParam);
+        int osSum = listOsStatsByShortLink.stream()
+                .mapToInt(each -> Integer.parseInt(each.get("count").toString()))
+                .sum();
+        listOsStatsByShortLink.forEach(each -> {
+            double ratio = (double) Integer.parseInt(each.get("count").toString()) / osSum;
+            double actualRatio = Math.round(ratio * 100.0) / 100.0;
+            ShortLinkStatsOsRespDTO osRespDTO = ShortLinkStatsOsRespDTO.builder()
+                    .cnt(Integer.parseInt(each.get("count").toString()))
+                    .os(each.get("os").toString())
+                    .ratio(actualRatio)
+                    .build();
+            osStats.add(osRespDTO);
+        });
+
+
         return ShortLinkStatsRespDTO
                 .builder()
                 .daily(BeanUtil.copyToList(listStatsByShortLink, ShortLinkStatsAccessDailyRespDTO.class))
                 .localeCnStats(localeCnStats)
                 .hourStats(hourStats)
+                .osStats(osStats)
                 .build();
     }
 }
