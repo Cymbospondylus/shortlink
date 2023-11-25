@@ -20,4 +20,9 @@ public class RecycleBinPageReqDTO extends Page {
      * 分组标识
      */
     private List<String> gidList;
+
+    /**
+     * 排序标识
+     */
+    private String orderTag;
 }
