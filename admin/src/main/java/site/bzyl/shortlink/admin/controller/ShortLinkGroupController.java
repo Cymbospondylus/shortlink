@@ -70,4 +70,6 @@ public class ShortLinkGroupController {
         shortLinkGroupService.sortShortLinkGroup(requestParam);
         return Results.success();
     }
+
+
 }
