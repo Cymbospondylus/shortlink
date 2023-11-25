@@ -34,5 +34,20 @@
         UPDATE
             cnt = cnt + #{linkLocaleStats.cnt};
     </insert>
+    <select id="listLocaleByShortLink" resultType="LinkLocaleStatsDO">
+        SELECT
+            province,
+            sum( cnt ) AS cnt
+        FROM
+            t_link_locale_stats
+        WHERE
+            full_short_url = #{param.fullShortUrl}
+          AND gid = #{param.gid}
+          AND ( date BETWEEN #{param.startDate} AND #{param.endDate} )
+        GROUP BY
+            full_short_url,
+            gid,
+            province
+    </select>
 
 </mapper>
