@@ -18,4 +18,6 @@ public interface linkAccessStatsMapper extends BaseMapper<LinkAccessStatsDO> {
     void accessShortLink(@Param("linkAccessStats") LinkAccessStatsDO linkAccessStatsDO);
 
     List<LinkAccessStatsDO> listStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
+
+    List<LinkAccessStatsDO> listHourStatsByShortLink(@Param("param") ShortLinkStatsReqDTO requestParam);
 }

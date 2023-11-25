@@ -1,6 +1,7 @@
 package site.bzyl.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.google.common.base.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import site.bzyl.shortlink.project.dao.entity.LinkAccessStatsDO;
@@ -14,6 +15,7 @@ import site.bzyl.shortlink.project.service.ShortLinkStatsService;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -49,11 +51,20 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 })
                 .collect(Collectors.toList());
 
+        // 小时访问统计
+        List<LinkAccessStatsDO> listHourStatsByShortLink = linkAccessStatsMapper.listHourStatsByShortLink(requestParam);
+        List<Integer> hourStats = Stream.iterate(0, i -> i + 1).limit(24).map(i -> listHourStatsByShortLink.stream()
+                        .filter(each -> Objects.equal(each.getHour(), i))
+                        .findFirst()
+                        .map(LinkAccessStatsDO::getPv)
+                        .orElse(0))
+                .collect(Collectors.toList());
 
         return ShortLinkStatsRespDTO
                 .builder()
                 .daily(BeanUtil.copyToList(listStatsByShortLink, ShortLinkStatsAccessDailyRespDTO.class))
                 .localeCnStats(localeCnStats)
+                .hourStats(hourStats)
                 .build();
     }
 }

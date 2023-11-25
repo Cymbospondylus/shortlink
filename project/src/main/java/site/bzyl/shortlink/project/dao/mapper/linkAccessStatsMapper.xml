@@ -52,5 +52,20 @@
             gid,
             date;
     </select>
+    <select id="listHourStatsByShortLink" resultType="LinkAccessStatsDO">
+        SELECT
+            hour,
+            sum( pv ) AS pv
+        FROM
+            t_link_access_stats
+        WHERE
+            full_short_url = #{param.fullShortUrl}
+          AND gid = #{param.gid}
+          AND ( date BETWEEN #{param.startDate} AND #{param.endDate} )
+        GROUP BY
+            full_short_url,
+            gid,
+            hour;
+    </select>
 
 </mapper>
